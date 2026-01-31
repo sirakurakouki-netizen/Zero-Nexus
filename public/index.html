@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; touch-action: none; }
+        #ui { position: absolute; bottom: 50px; left: 50px; width: 100px; height: 100px; 
+              background: rgba(255,255,255,0.2); border-radius: 50%; border: 2px solid #fff; }
+        #stick { width: 40px; height: 40px; background: #fff; border-radius: 50%; 
+                 position: relative; top: 30px; left: 30px; }
+    </style>
+</head>
+<body>
+    <div id="ui"><div id="stick"></div></div>
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        // 基本の3D設定
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // プレイヤー（箱）
+        const cube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+        scene.add(cube);
+        camera.position.z = 5;
+        camera.position.y = 2;
+        camera.lookAt(cube.position);
+
+        // ループ
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
