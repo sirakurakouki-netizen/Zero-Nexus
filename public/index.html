@@ -3,21 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zero-Nexus</title>
+    <title>Zero-Nexus | Nexus OS</title>
     <link rel="stylesheet" href="style.css">
     <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
         }
-    }
     </script>
 </head>
 <body>
-    <div id="game-container"></div>
-    <div id="ui-layer">
-        <h1 class="neon-text">ZERO-NEXUS</h1>
+    <div id="nexus-ui-layer">
+        <div id="os-overlay">
+            <div id="status-bar">
+                <span id="player-name">Zero-User</span>
+                <span id="credits">Credits: 0</span>
+            </div>
+        </div>
+
+        <div id="battle-hud" style="display: none;">
+            <button id="btn-attack">Attack / 攻撃</button>
+            <button id="btn-skill">Skill / 技</button>
+        </div>
+
+        <div id="joystick-container"></div>
     </div>
-    <script type="module" src="modules/core/game-master.js"></script>
+
+    <div id="game-canvas-container">
+        </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script type="module">
+        import { NexusMaster } from './modules/core/nexus-master.js';
+
+        window.addEventListener('load', () => {
+            console.log("Nexus OS Initializing...");
+            // OSの統括クラスを起動
+            const zeroNexus = new NexusMaster();
+            zeroNexus.boot();
+        });
+    </script>
 </body>
 </html>
