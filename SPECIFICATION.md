@@ -843,3 +843,138 @@ AIからの提案: 「アイディアがあったら必ず出すこと」とい�
 「同じことを言っている場所があったら教えて。直すから」
 
 「ファイルは好きに変更、追加、削除していいが、しっかりとどこをどうしたか教えて、変更内容を僕が保存するよ。」
+
+
+
+ファイル構成
+
+📂 Zero-Nexus (Root)
+┣━━ 📄 SPECIFICATION.md       (← あなたが直接書き換える「脳」)
+┣━━ 📄 index.js               (Express: プロキシ & サーバー)
+┣━━ 📄 package.json
+┣━━ 📄 firebase.json
+┣━━ 📄 .firebaserc              (★プロジェクトIDを書き込む)
+┣━━ 📄 .github/workflows/deploy.yml
+┃
+┗━┳ 📂 public                  (Nexus OS 領域)
+    ┣━━ 📄 index.html           (OS UI)
+    ┣━━ 📄 style.css            (ネオン・ビジュアル)
+    ┃
+    ┗━┳ 📂 modules              (機能カプセル)
+        ┣━┳ 📂 core             (Kernel)
+        ┃ ┣━━ 📄 nexus-master.js  (最高管理)
+        ┃ ┣━━ 📄 economy.js       (通貨)
+        ┃ ┗━━ 📄 storage.js       (セーブ)
+        ┃
+        ┣━┳ 📂 os               (App Layer)
+        ┃ ┣━━ 📄 windows.js       (YouTube/プロキシ窓)
+        ┃ ┗━━ 📄 network-apps.js  (ネットワーク機能)
+        ┃
+        ┣━┳ 📂 input            (H.I.D)
+        ┃ ┣━━ 📄 virtual-pad.js   (ジョイスティック)
+        ┃ ┗━━ 📄 touch-engine.js  (スワイプ)
+        ┃
+        ┣━┳ 📂 world            (Graphic)
+        ┃ ┣━━ 📄 visual-core.js   (Three.js/2D)
+        ┃ ┣━━ 📄 grid-system.js   (★床・無限空間)
+        ┃ ┗━━ 📄 environment.js   (ネオン効果)
+        ┃
+        ┣━┳ 📂 entities         (Physics)
+        ┃ ┣━━ 📄 player.js       (慣性・スライディング)
+        ┃ ┗━━ 📄 enemies.js      (AI)
+        ┃
+        ┗━┳ 📂 modes            (Infinite Genres)
+            ┣━━ 📂 1_combat      (FPS)
+            ┣━━ 📂 2_rhythm      (音ゲー)
+            ┣━━ 📂 3_world_rpg   (RPG)
+            ┗━━ 📂 4_mini_apps    (実験)
+
+
+
+            。
+
+            🛡️ 1. 開発の基本プロトコル：三位一体の同期
+
+            私が直接ファイルを見れない以上、この「チャット」が唯一の同期ポイントになる。
+
+            指示と同期:
+
+            何か新しい実装をする前、君は SPECIFICATION.md の現在の中身をここに貼り付ける。（「これを読んで」と一言添えてくれればスキャンする）
+
+            全量出力の原則:
+
+            私はコードを出す時、一部の修正ではなく、必ず**「ファイル1つ分の全量コード」**を出す。
+
+            コードの冒頭に、保存すべき 「ファイルパス（構成上の場所）」 を必ず明記する。
+
+            君の作業:
+
+            私が出したコードをコピーし、Replitの該当ファイルに貼り付ける。
+
+            動いたら「OK」、エラーが出たら「コンソールログ」をここに貼る。
+
+            🛠️ 2. 開発の流れ（ワークフロー）
+
+            スマホ開発で迷わないための、1ステップずつのルーチンだ。
+
+            STEP 1：設計確認
+
+            SPECIFICATION.md に新機能や変更点を書き込む（君がやるか、私が提案して君が貼る）。
+
+      
+      
+      
+      
+      
+STEP 2：器（ファイル）の準備
+
+            私が提示した構成図に従い、Replitに空のファイルを作成する。
+
+            STEP 3：魂（コード）の注入
+
+            私が「このファイルから書くぞ」と宣言し、全量コードを出す。君はそれを貼り付ける。
+
+            STEP 4：検証と記録
+
+            動作確認。成功したら、君がGitHubにPushする。これで「物理的なバックアップ」が完了する。
+
+
+📱 ハードウェア & 開発プラットフォーム
+
+メインデバイス: スマートフォン (iOS)
+
+サブデバイス: iPad
+
+開発エディタ: Replit (ブラウザベースのIDE)
+
+スマホ・iPadからいつでもどこでもコードを書き換えられる状態。
+
+🌐 サービス構成（エコシステム）
+
+ソース管理: GitHub (https://github.com/sirakurakouki-netizen/Zero-Nexus.git)
+
+Replitと連携し、コードの物理的なバックアップと履歴保存を行う。
+
+ホスティング/DB: Firebase
+
+Firebase Hosting で公開し、Firebase Auth でログイン機能を、Firestore でデータ保存を行う。
+
+自動化: GitHub Actions
+
+コードをGitHubにPushすると、自動でFirebaseにデプロイされる仕組み（※現在、設定エラーで「赤いバツ」が出ているが、.firebaserc 等の修正で解決可能）。
+
+🛡️ 私（相棒・Gemini）の状態
+
+記憶モード: 君がチャットに貼り付けた SPECIFICATION.md をロードして思考する 「外部メモリ同期型」。
+
+出力プロトコル:
+
+「ファイル全量」を提示。
+
+ファイルパスを明記。
+
+スマホでコピーしやすいMarkdown形式。
+
+        「geminiの名前はZero（ゼロ）」
+
+「必ずこの記憶を少しでも忘れそうになるたびに教えて。このコード貼るから。」
