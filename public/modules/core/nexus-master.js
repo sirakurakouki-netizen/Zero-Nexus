@@ -5,7 +5,10 @@ import { WindowManager } from '../os/windows.js';
 
 export class NexusMaster {
     constructor() {
-        this.version = "1.2.0-Streamer";
+        this.version = "1.2.5-Hybrid";
+        // 🚀 君のReplitサーバーURL（末尾のスラッシュなし）
+        this.serverUrl = "https://cca3af0f-34bf-4500-a3da-ac5a034fb110-00-3dcqrois903qa.sisko.replit.dev";
+
         this.visual = new VisualCore();
         this.input = new VirtualPad();
         this.player = new Player(this.visual);
@@ -22,13 +25,11 @@ export class NexusMaster {
 
     setupOSControls() {
         const appDrawer = document.getElementById('app-drawer');
-
         document.getElementById('nexus-menu-btn').onclick = (e) => {
             e.stopPropagation();
             appDrawer.classList.toggle('hidden');
         };
 
-        // 🚀 ストリーミング再生ボタン
         document.getElementById('launch-yt').onclick = () => {
             appDrawer.classList.add('hidden');
             this.openVideoPlayer();
@@ -40,7 +41,6 @@ export class NexusMaster {
         };
     }
 
-    // 🎬 プレイヤー窓（iframeを使わず、自前のvideoタグで再生）
     openVideoPlayer() {
         const playerHtml = `
             <div style="display:flex; flex-direction:column; height:100%; background:#000; color:#0ff;">
@@ -49,23 +49,18 @@ export class NexusMaster {
                         style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:5px; border-radius:4px; font-size:12px;">
                     <button id="video-load" style="background:#0ff; color:#000; border:none; padding:0 10px; border-radius:4px; font-weight:bold;">LOAD</button>
                 </div>
-                <div style="flex-grow:1; display:flex; align-items:center; justify-content:center; position:relative;">
-                    <video id="nexus-video" controls autoplay style="width:100%; max-height:100%; border:1px solid #0ff; box-shadow: 0 0 20px #0ff;"></video>
-                </div>
+                <video id="nexus-video" controls autoplay style="width:100%; flex-grow:1;"></video>
             </div>
         `;
-
-        const win = this.winManager.createWindow("Nexus Stream Player", playerHtml, { width: 500, height: 350, x: 50, y: 50 });
+        const win = this.winManager.createWindow("Nexus Stream", playerHtml, { width: 450, height: 300, x: 50, y: 50 });
         const loadBtn = win.querySelector('#video-load');
         const input = win.querySelector('#video-url');
         const video = win.querySelector('#nexus-video');
 
         loadBtn.onclick = () => {
-            const val = input.value.trim();
-            if(!val) return;
-            // サーバーのストリーミング中継エンドポイントに投げる
-            video.src = window.location.origin + "/video-stream?url=" + encodeURIComponent(val);
-            console.log("[Stream] Attempting to play:", val);
+            if(!input.value.trim()) return;
+            // サーバーURLを明示的に指定
+            video.src = `${this.serverUrl}/video-stream?url=${encodeURIComponent(input.value.trim())}`;
         };
     }
 
@@ -85,7 +80,8 @@ export class NexusMaster {
         const iframe = win.querySelector('#browser-viewport');
 
         goBtn.onclick = () => {
-            iframe.src = window.location.origin + "/proxy?url=" + encodeURIComponent(input.value.trim());
+            // サーバーURLを明示的に指定
+            iframe.src = `${this.serverUrl}/proxy?url=${encodeURIComponent(input.value.trim())}`;
         };
         if(initialUrl) goBtn.onclick();
     }
