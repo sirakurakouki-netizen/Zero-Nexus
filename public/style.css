@@ -1,85 +1,30 @@
-:root {
-    --neon-blue: #00ffff;
-    --neon-pink: #ff00ff;
-    --window-bg: rgba(5, 5, 10, 0.9);
+body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+
+#os-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20000; }
+
+#menu-btn {
+    position: absolute; top: 20px; left: 20px; pointer-events: auto;
+    background: rgba(0, 40, 60, 0.7); border: 2px solid #0ff; color: #0ff;
+    padding: 10px 20px; border-radius: 8px; font-weight: bold;
+    box-shadow: 0 0 10px #0ff;
 }
 
-* {
-    box-sizing: border-box;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-    touch-action: none;
+#nexus-window {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 300px; background: rgba(0, 20, 30, 0.9); border: 2px solid #0ff;
+    border-radius: 12px; pointer-events: auto; backdrop-filter: blur(10px);
 }
+.hidden { display: none; }
 
-body, html {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    overflow: hidden; background: #000;
-    font-family: 'Segoe UI', sans-serif;
-}
-
-#os-container { position: relative; width: 100vw; height: 100vh; }
-
-/* 3D世界 */
-#world-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-
-/* 窓レイヤー */
-#nexus-ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-
-/* 9ドットメニュー（左下） */
-.menu-dots {
-    position: absolute; bottom: 40px; left: 40px;
-    width: 65px; height: 65px;
-    background: rgba(0, 255, 255, 0.1);
-    border: 2px solid var(--neon-blue);
-    border-radius: 15px;
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 6px; padding: 12px;
-    pointer-events: auto; cursor: pointer;
-    box-shadow: 0 0 20px var(--neon-blue);
-    z-index: 100;
-}
-.menu-dots span { background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 5px var(--neon-blue); }
-
-/* スティック（右下：誤爆回避） */
-#v-pad-base {
-    position: absolute; bottom: 60px; right: 60px;
-    width: 140px; height: 140px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid var(--neon-blue);
-    border-radius: 50%; z-index: 100;
-    pointer-events: auto;
-}
-#v-pad-stick {
-    position: absolute; top: 45px; left: 45px;
-    width: 50px; height: 50px;
-    background: var(--neon-blue); border-radius: 50%;
-    box-shadow: 0 0 20px var(--neon-blue);
-}
-
-/* アプリドロワー */
-#app-drawer {
-    position: absolute; bottom: 120px; left: 40px;
-    background: var(--window-bg); border: 1px solid var(--neon-blue);
-    border-radius: 15px; padding: 20px; display: flex; gap: 20px;
-    pointer-events: auto; z-index: 101;
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
-}
-.hidden { display: none !important; }
-
-.app-item { display: flex; flex-direction: column; align-items: center; color: var(--neon-blue); font-size: 12px; }
-.app-icon { width: 50px; height: 50px; border-radius: 12px; margin-bottom: 8px; }
-.yt { background: #f00; box-shadow: 0 0 10px #f00; }
-.web { background: #0088ff; box-shadow: 0 0 10px #0088ff; }
-
-/* ウィンドウ装飾 */
-.nexus-window {
-    position: absolute; background: var(--window-bg);
-    border: 1px solid var(--neon-blue); border-radius: 12px;
-    pointer-events: auto; display: flex; flex-direction: column;
-}
 .window-header {
-    background: var(--neon-blue); color: #000; padding: 10px;
-    font-weight: bold; display: flex; justify-content: space-between;
-    border-top-left-radius: 10px; border-top-right-radius: 10px;
+    background: #0ff; color: #000; padding: 5px 10px; display: flex;
+    justify-content: space-between; font-size: 12px; font-weight: bold;
+}
+.window-content { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+
+#yt-url {
+    background: #000; border: 1px solid #0ff; color: #0ff; padding: 10px; border-radius: 4px;
+}
+#yt-play-btn {
+    background: #0ff; border: none; padding: 10px; font-weight: bold; cursor: pointer;
 }

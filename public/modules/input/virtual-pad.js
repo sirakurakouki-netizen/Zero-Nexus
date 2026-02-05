@@ -1,53 +1,51 @@
 export class VirtualPad {
-    constructor() {
-        this.base = document.getElementById('v-pad-base');
-        this.stick = document.getElementById('v-pad-stick');
-        this.input = { x: 0, y: 0 };
-        this.active = false;
+    constructor(engine) {
+        this.engine = engine;
+        this.base = document.getElementById('joystick-base');
+        this.stick = document.getElementById('joystick-stick');
+        this.touchId = null;
     }
 
     init() {
-        const handleStart = (e) => {
-            this.active = true;
-            handleMove(e);
-        };
+        // スティック基部（左下）にタッチが始まった時だけ反応
+        this.base.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            this.touchId = touch.identifier;
+            this.handleInput(touch);
+        }, { passive: false });
 
-        const handleMove = (e) => {
-            if (!this.active) return;
-            const touch = e.touches ? e.touches[0] : e;
-            const rect = this.base.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            let dx = touch.clientX - centerX;
-            let dy = touch.clientY - centerY;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            const maxDist = rect.width / 2;
-
-            if (dist > maxDist) {
-                dx *= maxDist / dist;
-                dy *= maxDist / dist;
+        window.addEventListener('touchmove', (e) => {
+            const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
+            if (touch) {
+                e.preventDefault();
+                this.handleInput(touch);
             }
+        }, { passive: false });
 
-            this.stick.style.transform = `translate(${dx}px, ${dy}px)`;
-            this.input.x = dx / maxDist;
-            this.input.y = dy / maxDist;
+        const endHandler = (e) => {
+            const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
+            if (touch) {
+                this.touchId = null;
+                this.stick.style.transform = `translate(0px, 0px)`;
+                this.engine.inputVector.set(0, 0);
+            }
         };
 
-        const handleEnd = () => {
-            this.active = false;
-            this.stick.style.transform = `translate(0px, 0px)`;
-            this.input = { x: 0, y: 0 };
-        };
-
-        this.base.addEventListener('touchstart', handleStart);
-        window.addEventListener('touchmove', handleMove);
-        window.addEventListener('touchend', handleEnd);
-
-        this.base.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchend', endHandler);
+        window.addEventListener('touchcancel', endHandler);
     }
 
-    getMovement() { return this.input; }
+    handleInput(touch) {
+        const rect = this.base.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        let dx = touch.clientX - centerX;
+        let dy = touch.clientY - centerY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const limit = rect.width / 2;
+        if (dist > limit) { dx *= limit / dist; dy *= limit / dist; }
+        this.stick.style.transform = `translate(${dx}px, ${dy}px)`;
+        this.engine.inputVector.set(dx / limit, dy / limit);
+    }
 }

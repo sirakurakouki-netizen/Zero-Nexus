@@ -2,9 +2,26 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zero-Nexus OS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Zero-Nexus</title>
     <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="os-ui">
+        <button id="menu-btn">MENU / メニュー</button>
+
+        <div id="nexus-window" class="hidden">
+            <div class="window-header">
+                <span>YOUTUBE STREAMER</span>
+                <button id="close-btn">×</button>
+            </div>
+            <div class="window-content">
+                <input type="text" id="yt-url" placeholder="YouTube URL or ID...">
+                <button id="yt-play-btn">PLAY / 再生</button>
+            </div>
+        </div>
+    </div>
+
     <script type="importmap">
         {
             "imports": {
@@ -12,43 +29,6 @@
             }
         }
     </script>
-</head>
-<body>
-    <div id="os-container">
-        <canvas id="world-canvas"></canvas>
-
-        <div id="nexus-ui-layer"></div>
-
-        <div id="ui-layer">
-            <div id="nexus-menu-btn" class="menu-dots">
-                <span></span><span></span><span></span>
-                <span></span><span></span><span></span>
-                <span></span><span></span><span></span>
-            </div>
-
-            <div id="app-drawer" class="hidden">
-                <div class="app-item" id="launch-yt">
-                    <div class="app-icon yt"></div>
-                    <span>Stream</span>
-                </div>
-                <div class="app-item" id="launch-browser">
-                    <div class="app-icon web"></div>
-                    <span>Browser</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="v-pad-base">
-            <div id="v-pad-stick"></div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { NexusMaster } from './modules/core/nexus-master.js';
-        window.addEventListener('load', () => {
-            const nexus = new NexusMaster();
-            nexus.boot();
-        });
-    </script>
+    <script type="module" src="modules/core/nexus-master.js"></script>
 </body>
 </html>

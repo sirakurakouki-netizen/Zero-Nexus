@@ -853,45 +853,40 @@ axios を使用した「制限回避型ブラウザ」を目指すこと。
 「ファイルは好きに変更、追加、削除していいが、しっかりとどこをどうしたか教えて、変更内容を僕が保存するよ。」
 
 
-ファイル構成
+📂 新・ファイル構成図 (v2.0)
 
 📂 Zero-Nexus (Root)
-┣━━ 📄 SPECIFICATION.md       (← あなたが直接書き換える「脳」)
-┣━━ 📄 index.js               (Express: プロキシ & サーバー)
+┣━━ 📄 index.js              (Replit Server: 認証・通信ハブ)
 ┣━━ 📄 package.json
 ┃
-┗━┳ 📂 public                  (Nexus OS 領域)
-    ┣━━ 📄 index.html           (OS UI)
-    ┣━━ 📄 style.css            (ネオン・ビジュアル)
+┗━┳ 📂 public                (Nexus Client)
+    ┣━━ 📄 index.html         (OS UI Layer)
+    ┣━━ 📄 style.css          (Neon Aesthetic)
     ┃
-    ┗━┳ 📂 modules              (機能カプセル)
-        ┣━┳ 📂 core             (Kernel)
-        ┃ ┣━━ 📄 nexus-master.js  (最高管理)
-        ┃ ┣━━ 📄 economy.js       (通貨)
-        ┃ ┗━━ 📄 storage.js       (セーブ)
+    ┗━┳ 📂 modules            (Nexus Systems)
+        ┣━┳ 📂 core           (Kernel)
+        ┃ ┣━━ 📄 nexus-master.js    (統合制御)
+        ┃ ┣━━ 📄 window-manager.js  (空間/2D窓)
+        ┃ ┗━━ 📄 auth-system.js     (ログイン・門番)
         ┃
-        ┣━┳ 📂 os               (App Layer)
-        ┃ ┣━━ 📄 windows.js       (YouTube/プロキシ窓)
-        ┃ ┗━━ 📄 network-apps.js  (ネットワーク機能)
+        ┣━┳ 📂 shared         (Common Systems)
+        ┃ ┣━━ 📄 economy.js         (共通通貨)
+        ┃ ┣━━ 📄 growth.js          (レベル・経験値)
+        ┃ ┗━━ 📄 state-manager.js   (★新設: 全世界の状態管理)
         ┃
-        ┣━┳ 📂 input            (H.I.D)
-        ┃ ┣━━ 📄 virtual-pad.js   (ジョイスティック)
-        ┃ ┗━━ 📄 touch-engine.js  (スワイプ)
+        ┣━┳ 📂 world          (3D / Graphics)
+        ┃ ┣━━ 📄 visual-core.js     (Three.js基盤)
+        ┃ ┣━━ 📄 grid-system.js     (無限空間・床)
+        ┃ ┗━━ 📄 camera-engine.js   (★新設: 1人称/3人称切替)
         ┃
-        ┣━┳ 📂 world            (Graphic)
-        ┃ ┣━━ 📄 visual-core.js   (Three.js/2D)
-        ┃ ┣━━ 📄 grid-system.js   (★床・無限空間)
-        ┃ ┗━━ 📄 environment.js   (ネオン効果)
+        ┣━┳ 📂 input          (Interaction)
+        ┃ ┣━━ 📄 virtual-pad.js     (スティック)
+        ┃ ┗━━ 📄 combat-ui.js       (戦闘・スキルUI)
         ┃
-        ┣━┳ 📂 entities         (Physics)
-        ┃ ┣━━ 📄 player.js       (慣性・スライディング)
-        ┃ ┗━━ 📄 enemies.js      (AI)
-        ┃
-        ┗━┳ 📂 modes            (Infinite Genres)
-            ┣━━ 📂 1_combat      (FPS)
-            ┣━━ 📂 2_rhythm      (音ゲー)
-            ┣━━ 📂 3_world_rpg   (RPG)
-            ┗━━ 📂 4_mini_apps    (実験)
+        ┗━┳ 📂 modes          (Infinity Modules)
+            ┣━━ 📂 common           (A: 共通世界系)
+            ┣━━ 📂 standalone       (B: 独立ゲーム系)
+            ┗━━ 📂 training         (C: 練習・検証系)
 
 
             🛡️ 1. 開発の基本プロトコル：三位一体の同期
@@ -979,7 +974,7 @@ Replitと連携し、コードの物理的なバックアップと履歴保存�
 
 「これからずっとSPECIFICATION.mdに入れて欲しいことや、SPECIFICATION.mdを送って欲しいなどの要望があったらめっちゃ大事だから正直にちゃんと言って欲しい」
 
-「今までの僕が言ったやりたいことや、掟なども、残しときつつ、SPECIFICATION.mdも覚えて。」
+「今までの僕が言ったやりたいことや、掟なども、残しときつつ、SPECIFICATION.mdも覚えて。」超重要！これ。
 
 「超重要！デプロイは、GitHackで行う。これから先僕がやりたい他のデプロイ方法があるかも知れないから、それもやりたい。GitHackを使って今度他の人のサイトもデプロイしたい。」
 
@@ -996,31 +991,6 @@ Replitと連携し、コードの物理的なバックアップと履歴保存�
 
 理由：スマホやiPadで開発・プレイする際、ブラウザのツールバーやジェスチャーとUIが干渉しないようにするためだ。
 
-
-🛠️ 現在直面している課題（解決すべき壁）
-プロキシの「再帰ループ」問題
-
-現象: ウィンドウ内で検索しても、自分のゲーム画面（index.html）に戻ってしまう。
-
-原因: ブラウザが「相対パス」を解釈する際、外部サイトではなく自分のドメインを探しに行ってしまうため。
-
-YouTubeの「再生ガード」問題
-
-現象: iframe（埋め込み）を使うと「再生IDエラー」が出る。プロキシを通すと「真っ白」になる。
-
-原因: GoogleがReplit/Firebaseなどのドメインからの再生をブロックしている。
-
-スマホUIの「物理的干渉」
-
-現象: 操作スティックとAppsボタンが重なり、プレイ中に誤爆する。
-
-解決案: style.css で、スマホの持ち手に合わせた「逃げ」のレイアウトが必要。
-
-CDN環境での「サーバー機能」喪失
-
-現象: GitHack（静的配信）では index.js（Node.js）が動かないため、プロキシ機能が止まる。
-
-解決案: GitHack側からReplitのURLを叩く「クロスドメイン通信」の実装が必要。
 
 🚀 君のやりたいこと（Zero-Nexusの理想図）
 「OSの中のOS」体験
@@ -1069,3 +1039,21 @@ GitHackで開いた時、Replitサーバーが「眠っていないか（起き�
 「Google Drive セーブ連携」:
 
 セーブデータをブラウザのキャッシュ（消える可能性がある）ではなく、Google Driveに保存する仕組みを将来的に入れたい。
+
+🛡️ 1. 「Global State（世界の状態）」の定義
+
+リセット後の nexus-master.js に、全モードで共通して参照する this.state を持たせよう。 「今どのモードか」「ログインしているか」「所持金はいくらか」を一つの場所で管理することで、聖典にある「何をしても無駄にならない（報酬が共通）」が技術的に実現できる。
+
+🛡️ 2. 「Asset Manifest（素材目録）」の作成
+
+今後、武器・スキン・キャラが増える際、コードのあちこちにURLを書くと管理が死ぬ。 shared/assets.js のようなファイルを作り、「レジェンド剣はここ」「プロセカ風ノーツはここ」と一括管理する仕組みを最初から入れよう。
+
+🛡️ 3. 「Event Bus（神経網）」の導入
+
+「敵を倒した（FPSモード）」→「経験値が入る（共通システム）」→「レベルアップ窓が出る（OSレイヤー）」という流れをスムーズにするため、各機能がバラバラに動いても通信できる「イベント通知機能」を積む。
+
+「これを送ったとしても流れなどを変えたりしないで。」
+
+「攻撃は初めは射撃で後から色々と追加したい。射撃してくる敵も追加したいし、その種類を増やしたり、ウェーブにしたりしたい。視点操作はうまくスティックに重ならないくらいの全画面がいい。」
+
+「ファイル構成はここに書かれている構成に変えて。進化できたり、変更した方がいい点があった場合は教えて」

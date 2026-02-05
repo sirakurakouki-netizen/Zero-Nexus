@@ -1,51 +1,39 @@
 import * as THREE from 'three';
+import { CSS3DRenderer } from 'https://unpkg.com/three@0.160.0/examples/jsm/renderers/CSS3DRenderer.js';
 
 export class VisualCore {
     constructor() {
-        this.canvas = document.getElementById('world-canvas');
-        this.scene = null;
-        this.camera = null;
-        this.renderer = null;
+        this.scene = new THREE.Scene();
+        this.cssScene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.cssRenderer = new CSS3DRenderer();
     }
 
-    init() {
-        try {
-            // レンダラーの作成
-            this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setPixelRatio(window.devicePixelRatio);
+    async init() {
+        // CSS3D レイヤー (最背面にして、WebGLを透明に重ねる)
+        this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
+        this.cssRenderer.domElement.style.position = 'absolute';
+        this.cssRenderer.domElement.style.top = '0';
+        this.cssRenderer.domElement.style.zIndex = '0'; // ここを0に
+        document.body.appendChild(this.cssRenderer.domElement);
 
-            // シーンとカメラ
-            this.scene = new THREE.Scene();
-            this.scene.background = new THREE.Color(0x000000);
-
-            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            this.camera.position.set(0, 5, 10);
-            this.camera.lookAt(0, 0, 0);
-
-            // 💡 仮の床（これが出れば成功）
-            const grid = new THREE.GridHelper(100, 50, 0x00ffff, 0x222222);
-            this.scene.add(grid);
-
-            window.addEventListener('resize', () => this.onResize());
-            console.log("Visual Engine: WebGL Initialized");
-        } catch (e) {
-            console.error("Visual System Crash:", e);
-            // 致命的なエラーなら、背景を強制的にネオンブルーにして「動いている」ことを示す
-            this.canvas.style.background = "radial-gradient(circle, #001122 0%, #000000 100%)";
-        }
-    }
-
-    onResize() {
-        if (!this.camera) return;
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
+        // WebGL レイヤー
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setClearColor(0x000000, 0); // 背景を透明にする
+        this.renderer.domElement.style.position = 'absolute';
+        this.renderer.domElement.style.top = '0';
+        this.renderer.domElement.style.zIndex = '1'; 
+        this.renderer.domElement.style.pointerEvents = 'none'; // 3D部分以外をスルーしてYouTubeを触れるように
+        document.body.appendChild(this.renderer.domElement);
+
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.8));
     }
 
-    update() {
-        if (this.renderer && this.scene && this.camera) {
-            this.renderer.render(this.scene, this.camera);
-        }
+    add(obj) { this.scene.add(obj); }
+    render() {
+        this.renderer.render(this.scene, this.camera);
+        this.cssRenderer.render(this.cssScene, this.camera);
     }
 }

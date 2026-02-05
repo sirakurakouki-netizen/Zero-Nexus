@@ -1,30 +1,39 @@
 import * as THREE from 'three';
 
 export class GridSystem {
-    constructor() {
-        this.gridSize = 100;
-        this.divisions = 50;
-        this.gridHelper = null;
+    constructor(visual) {
+        this.visual = visual;
+        this.gridSize = 2000;
+        this.divisions = 80; // 分割数を調整して密度を上げる
     }
 
-    addToScene(scene) {
-        // ネオンブルーのワイヤーフレーム
-        const color1 = 0x00ffff; // 中心線
-        const color2 = 0x0055ff; // 格子線
+    init() {
+        // ネオンブルーのグリッド（太い線に見せるためにMaterialを工夫）
+        const gridHelper = new THREE.GridHelper(
+            this.gridSize, 
+            this.divisions, 
+            0x00ffff, 
+            0x00ffff 
+        );
 
-        this.gridHelper = new THREE.GridHelper(this.gridSize, this.divisions, color1, color2);
+        // グリッド自体のマテリアルを少し明るく
+        gridHelper.material.opacity = 0.8;
+        gridHelper.material.transparent = true;
 
-        // 思想：ワイヤーフレーム寄りのビジュアル
-        this.gridHelper.material.transparent = true;
-        this.gridHelper.material.opacity = 0.5;
+        // 床の反射を受け止める暗い平面
+        const planeGeo = new THREE.PlaneGeometry(this.gridSize, this.gridSize);
+        const planeMat = new THREE.MeshStandardMaterial({ 
+            color: 0x000505, 
+            roughness: 0.1, // 低いほど反射が強くなる
+            metalness: 0.5 
+        });
+        const floor = new THREE.Mesh(planeGeo, planeMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
 
-        scene.add(this.gridHelper);
+        this.visual.add(gridHelper);
+        this.visual.add(floor);
 
-        // 霧（フォグ）を追加して無限感とネオンの質感を出す
-        scene.fog = new THREE.Fog(0x000000, 1, 50);
-    }
-
-    update() {
-        // ここに床がスクロールするアニメーションなどを後で追加可能
+        console.log("Grid System: Neon Heavy Grid Generated");
     }
 }
