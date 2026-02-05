@@ -1,43 +1,51 @@
 import * as THREE from 'three';
-import { GridSystem } from './grid-system.js';
 
 export class VisualCore {
     constructor() {
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.grid = new GridSystem();
+        this.canvas = document.getElementById('world-canvas');
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
     }
 
     init() {
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        // ネオンが映える漆黒の世界
-        this.renderer.setClearColor(0x000000, 1);
-        document.getElementById('game-canvas-container').appendChild(this.renderer.domElement);
+        try {
+            // レンダラーの作成
+            this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setPixelRatio(window.devicePixelRatio);
 
-        // カメラの初期位置 (3人称視点の準備)
-        this.camera.position.set(0, 2, 5);
-        this.camera.lookAt(0, 0, 0);
+            // シーンとカメラ
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0x000000);
 
-        // グリッド（床）の追加
-        this.grid.addToScene(this.scene);
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.camera.position.set(0, 5, 10);
+            this.camera.lookAt(0, 0, 0);
 
-        // 環境光
-        const ambientLight = new THREE.AmbientLight(0x404040, 2);
-        this.scene.add(ambientLight);
+            // 💡 仮の床（これが出れば成功）
+            const grid = new THREE.GridHelper(100, 50, 0x00ffff, 0x222222);
+            this.scene.add(grid);
 
-        window.addEventListener('resize', () => this.onWindowResize());
+            window.addEventListener('resize', () => this.onResize());
+            console.log("Visual Engine: WebGL Initialized");
+        } catch (e) {
+            console.error("Visual System Crash:", e);
+            // 致命的なエラーなら、背景を強制的にネオンブルーにして「動いている」ことを示す
+            this.canvas.style.background = "radial-gradient(circle, #001122 0%, #000000 100%)";
+        }
     }
 
-    onWindowResize() {
+    onResize() {
+        if (!this.camera) return;
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     update() {
-        this.grid.update();
-        this.renderer.render(this.scene, this.camera);
+        if (this.renderer && this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 }

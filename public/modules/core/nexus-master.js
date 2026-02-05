@@ -5,115 +5,117 @@ import { WindowManager } from '../os/windows.js';
 
 export class NexusMaster {
     constructor() {
-        this.version = "1.4.1-Fixed";
+        this.version = "1.6.5-Secure-Link";
+        // ★重要: GitHackからでも届くように絶対パスを強制
         this.serverUrl = "https://cca3af0f-34bf-4500-a3da-ac5a034fb110-00-3dcqrois903qa.sisko.replit.dev";
-        this.visual = new VisualCore();
-        this.input = new VirtualPad();
-        this.player = new Player(this.visual);
-        this.winManager = new WindowManager();
+
+        try {
+            this.visual = new VisualCore();
+            this.input = new VirtualPad();
+            this.winManager = new WindowManager();
+            this.player = new Player(this.visual);
+            console.log("Modules Loaded: Ready for Deployment");
+        } catch (e) {
+            console.error("Critical Load Error:", e);
+        }
+    }
+
+    // iOS/Replit間でバグらないための安全なBase64
+    st(url) {
+        return btoa(encodeURIComponent(url).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+            return String.fromCharCode('0x' + p1);
+        }));
     }
 
     boot() {
-        this.visual.init();
-        this.input.init();
-        this.player.init();
+        if (this.visual) this.visual.init();
+        if (this.input) this.input.init();
+        if (this.player) this.player.init();
         this.setupOSControls();
         this.tick();
     }
 
     setupOSControls() {
-        const appDrawer = document.getElementById('app-drawer');
-        document.getElementById('nexus-menu-btn').onclick = (e) => {
-            e.stopPropagation();
-            appDrawer.classList.toggle('hidden');
-        };
+        const menuBtn = document.getElementById('nexus-menu-btn');
+        const drawer = document.getElementById('app-drawer');
+        const launchYt = document.getElementById('launch-yt');
+        const launchWeb = document.getElementById('launch-browser');
 
-        document.getElementById('launch-yt').onclick = () => {
-            appDrawer.classList.add('hidden');
-            this.openNexusPlayer();
-        };
+        if (menuBtn && drawer) {
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                drawer.classList.toggle('hidden');
+            });
+        }
 
-        document.getElementById('launch-browser').onclick = () => {
-            appDrawer.classList.add('hidden');
-            this.openWebBrowser("https://www.bing.com");
-        };
+        if (launchYt) launchYt.onclick = () => { drawer.classList.add('hidden'); this.openStealthPlayer(); };
+        if (launchWeb) launchWeb.onclick = () => { drawer.classList.add('hidden'); this.openStealthBrowser("https://www.bing.com"); };
     }
 
-    openNexusPlayer() {
-        const playerHtml = `
-            <div style="display:flex; flex-direction:column; height:100%; background:#000; color:#0ff; font-family:monospace;">
-                <div style="padding:10px; display:flex; gap:5px; background:#111;">
-                    <input type="text" id="yt-url" placeholder="Paste YouTube Link..." 
-                        style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:8px; border-radius:6px;">
-                    <button id="yt-play" style="background:#0ff; color:#000; border:none; padding:0 15px; border-radius:6px; font-weight:bold;">PLAY</button>
-                </div>
-                <div id="v-display" style="flex-grow:1; display:flex; justify-content:center; align-items:center; background:#000; position:relative;">
-                    <div id="v-loader" style="text-align:center;">
-                        <p id="v-msg">Nexus Video Ready</p>
-                    </div>
-                    <video id="v-player" controls playsinline style="display:none; width:100%; height:100%;"></video>
+    openStealthPlayer() {
+        const html = `
+            <div style="background:#000; height:100%; display:flex; flex-direction:column; padding:15px;">
+                <input id="u" placeholder="YouTube URL..." style="width:100%; background:#111; color:#0ff; border:1px solid #0ff; padding:10px; border-radius:8px;">
+                <button id="p" style="width:100%; background:#0ff; color:#000; font-weight:bold; height:45px; margin-top:10px; border-radius:8px; border:none; cursor:pointer;">STREAM DECODE</button>
+                <div style="flex-grow:1; display:flex; align-items:center; justify-content:center; margin-top:10px; border:1px dashed #333;">
+                    <video id="v" controls playsinline preload="auto" style="width:100%; max-height:100%; display:none;"></video>
+                    <p id="msg" style="color:#0ff; font-size:12px;">Waiting for URL...</p>
                 </div>
             </div>
         `;
-        const win = this.winManager.createWindow("Nexus Video", playerHtml, { width: 480, height: 320, x: 20, y: 50 });
-        const playBtn = win.querySelector('#yt-play');
-        const input = win.querySelector('#yt-url');
-        const video = win.querySelector('#v-player');
-        const msg = win.querySelector('#v-msg');
+        const win = this.winManager.createWindow("Nexus Streamer", html, { width: 400, height: 350, x: 20, y: 50 });
+        const video = win.querySelector('#v');
+        const btn = win.querySelector('#p');
+        const msg = win.querySelector('#msg');
 
-        playBtn.onclick = () => {
-            const url = input.value.trim();
+        btn.onclick = () => {
+            const url = win.querySelector('#u').value.trim();
             if(!url) return;
+            msg.innerText = "Bypassing Google Filters...";
 
-            msg.innerText = "Connecting to Server...";
-            video.style.display = "none";
-
-            // 重要：キャッシュを避けるためにタイムスタンプを付与
-            video.src = `${this.serverUrl}/video-stream?url=${encodeURIComponent(url)}&t=${Date.now()}`;
+            // 重要：キャッシュをクリアして新規リクエスト
+            video.pause();
+            video.removeAttribute('src');
             video.load();
 
-            video.onplaying = () => {
-                msg.style.display = "none";
-                video.style.display = "block";
-            };
+            const apiTarget = `${this.serverUrl}/api/v1/stream?d=${this.st(url)}`;
+            video.src = apiTarget;
+            video.style.display = "block";
+            msg.style.display = "none";
 
-            video.onerror = (e) => {
-                msg.innerText = "Stream Error: Server Blocked.";
-                console.error("Video Error", video.error);
-            };
+            video.play().catch(e => {
+                msg.style.display = "block";
+                msg.innerText = "iOS Security: Tap Play Button to start.";
+            });
         };
     }
 
-    openWebBrowser(initialUrl = "") {
-        const browserHtml = `
-            <div style="display:flex; flex-direction:column; height:100%; background:#111;">
-                <div style="padding:10px; display:flex; gap:5px; background:#222;">
-                    <input type="text" id="b-url" value="${initialUrl}" style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:8px; border-radius:6px;">
-                    <button id="b-go" style="background:#0ff; color:#000; border:none; padding:0 15px; border-radius:6px; font-weight:bold;">GO</button>
+    openStealthBrowser(initialUrl) {
+        const html = `
+            <div style="display:flex; flex-direction:column; height:100%;">
+                <div style="background:#111; padding:5px; display:flex; gap:5px;">
+                    <input id="url-in" value="${initialUrl}" style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:5px; font-size:12px;">
+                    <button id="go-btn" style="background:#0ff; border:none; padding:0 10px;">GO</button>
                 </div>
-                <iframe id="b-view" style="flex-grow:1; border:none; background:white;"></iframe>
+                <iframe id="f" style="flex-grow:1; background:#fff; border:none;"></iframe>
             </div>
         `;
-        const win = this.winManager.createWindow("Nexus Browser", browserHtml, { width: 500, height: 400, x: 10, y: 40 });
-        const goBtn = win.querySelector('#b-go');
-        const input = win.querySelector('#b-url');
-        const iframe = win.querySelector('#b-view');
+        const win = this.winManager.createWindow("Nexus Proxy", html, { width: 450, height: 400, x: 30, y: 70 });
+        const iframe = win.querySelector('#f');
+        const input = win.querySelector('#url-in');
+        const go = win.querySelector('#go-btn');
 
-        const load = () => {
-            let url = input.value.trim();
-            if(!url) return;
-            if(!url.includes('.')) url = "https://www.bing.com/search?q=" + encodeURIComponent(url);
-            if(!url.startsWith('http')) url = "https://" + url;
-            iframe.src = `${this.serverUrl}/proxy?url=${encodeURIComponent(url)}`;
+        const loadUrl = (url) => {
+            iframe.src = `${this.serverUrl}/api/v1/fetch?d=${this.st(url)}`;
         };
 
-        goBtn.onclick = load;
-        if(initialUrl) load();
+        go.onclick = () => loadUrl(input.value.trim());
+        loadUrl(initialUrl);
     }
 
     tick() {
         requestAnimationFrame(() => this.tick());
-        this.player.update(this.input.getMovement());
-        this.visual.update();
+        if (this.player && this.input) this.player.update(this.input.getMovement());
+        if (this.visual) this.visual.update();
     }
 }

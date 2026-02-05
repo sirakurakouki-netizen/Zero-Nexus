@@ -5,61 +5,57 @@ const ytdl = require('ytdl-core');
 const app = express();
 const port = 3000;
 
-app.use(cors());
+// すべてのドメイン（GitHack等）からの通信を許可
+app.use(cors({ origin: '*' }));
 app.use(express.static('public'));
 
-// 🎬 YouTubeストリーミング（安定化版）
-app.get('/video-stream', async (req, res) => {
-    const videoUrl = req.query.url;
-    if (!videoUrl) return res.status(400).send("No URL");
+// 🌐 プロキシ：URLの解釈をさらに強化
+app.get('/api/v1/fetch', async (req, res) => {
+    const encodedUrl = req.query.d;
+    if (!encodedUrl) return res.status(400).send("No URL Data");
 
     try {
-        // YouTube情報の取得にエージェント情報を偽装してブロック回避
-        const info = await ytdl.getInfo(videoUrl, {
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                }
-            }
-        });
-
-        // iPhoneで見れる形式（mp4）を優先的に探す
-        const format = ytdl.chooseFormat(info.formats, { 
-            quality: 'highest', 
-            filter: 'audioandvideo' 
-        });
-
-        if (!format) throw new Error("No compatible format found");
-
-        console.log(`Now Streaming: ${info.videoDetails.title}`);
-
-        // ブラウザ側に動画であることを伝える
-        res.setHeader('Content-Type', 'video/mp4');
-        res.setHeader('Accept-Ranges', 'bytes');
-
-        // ストリームを直接流し込む
-        ytdl(videoUrl, { format: format }).pipe(res);
-
-    } catch (e) {
-        console.error("Stream Server Error:", e.message);
-        res.status(500).json({ error: e.message });
-    }
-});
-
-// ブラウザ（プロキシ）をより「透過的」にする
-app.get('/proxy', async (req, res) => {
-    const targetUrl = req.query.url;
-    if (!targetUrl) return res.status(400).send("No URL");
-    try {
+        const targetUrl = Buffer.from(encodedUrl, 'base64').toString();
         const response = await axios.get(targetUrl, {
-            responseType: 'arraybuffer', // バイナリで受け取る
-            headers: { 'User-Agent': 'Mozilla/5.0' }
+            responseType: 'arraybuffer',
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            }
         });
         res.set('Content-Type', response.headers['content-type']);
         res.send(response.data);
     } catch (e) {
-        res.status(500).send("Proxy Blocked");
+        console.error("Proxy Error:", e.message);
+        res.status(500).send(`Proxy Failure: ${e.message}`);
     }
 });
 
-app.listen(port, () => console.log("Nexus Server Re-Loaded"));
+// 🎬 YouTube：iOS Safariが「本物の動画」だと信じるためのヘッダーを付与
+app.get('/api/v1/stream', async (req, res) => {
+    const encodedUrl = req.query.d;
+    if (!encodedUrl) return res.status(400).send("No URL");
+
+    try {
+        const videoUrl = Buffer.from(encodedUrl, 'base64').toString();
+        const info = await ytdl.getInfo(videoUrl);
+        const format = ytdl.chooseFormat(info.formats, { 
+            quality: 'highest', 
+            filter: 'audioandvideo', 
+            format: 'mp4' 
+        });
+
+        // iOS向けの魔法のヘッダー
+        res.setHeader('Content-Type', 'video/mp4');
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'no-cache');
+
+        ytdl(videoUrl, { format: format }).pipe(res);
+    } catch (e) {
+        console.error("Stream Error:", e.message);
+        res.status(500).send("Stream Error");
+    }
+});
+
+app.listen(port, () => console.log("Nexus Core: Deep Communication Ready"));

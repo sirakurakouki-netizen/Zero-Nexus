@@ -4,39 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zero-Nexus OS</title>
-    <link rel="stylesheet" href="./style.css">
-
-    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <link rel="stylesheet" href="style.css">
     <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+            }
         }
-    }
     </script>
 </head>
 <body>
-    <div id="game-canvas-container"></div>
+    <div id="os-container">
+        <canvas id="world-canvas"></canvas>
 
-    <div id="nexus-ui-layer">
-        <div id="main-launcher">
-            <button id="nexus-menu-btn" class="main-btn">
-                <span style="font-size: 24px;">Z</span>
-            </button>
+        <div id="nexus-ui-layer"></div>
+
+        <div id="ui-layer">
+            <div id="nexus-menu-btn" class="menu-dots">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </div>
+
             <div id="app-drawer" class="hidden">
-                <button class="drawer-item" id="launch-yt">📺 YouTube (Stream)</button>
-                <button class="drawer-item" id="launch-browser">🌐 Web Browser</button>
+                <div class="app-item" id="launch-yt">
+                    <div class="app-icon yt"></div>
+                    <span>Stream</span>
+                </div>
+                <div class="app-item" id="launch-browser">
+                    <div class="app-icon web"></div>
+                    <span>Browser</span>
+                </div>
             </div>
         </div>
 
-        <div id="battle-hud">
-            <button class="hud-btn">⚔️ Attack / 攻撃</button>
-            <button class="hud-btn">🛡️ Skill / 技</button>
-        </div>
-
-        <div id="joystick-container">
-            <div id="joystick-stick"></div>
+        <div id="v-pad-base">
+            <div id="v-pad-stick"></div>
         </div>
     </div>
 
@@ -45,7 +48,6 @@
         window.addEventListener('load', () => {
             const nexus = new NexusMaster();
             nexus.boot();
-            window.nexus = nexus;
         });
     </script>
 </body>
