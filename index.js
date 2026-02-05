@@ -1,7 +1,6 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-// const ytdl = require('ytdl-core'); // 次回以降、これで動画を引っこ抜く
 const app = express();
 const port = 3000;
 
@@ -14,28 +13,40 @@ app.get('/proxy', async (req, res) => {
     if (!targetUrl.startsWith('http')) targetUrl = 'https://' + targetUrl;
 
     try {
-        const serverUrl = `https://${req.get('host')}`;
         const response = await axios.get(targetUrl, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
             },
-            timeout: 10000
+            timeout: 15000,
+            validateStatus: false // エラーコードが返ってきても中身を表示する
         });
 
         let html = response.data;
+        if (typeof html !== 'string') {
+            return res.send("This content cannot be displayed as HTML.");
+        }
+
         const origin = new URL(targetUrl).origin;
 
-        // 1. Baseタグ挿入（画像などの解決）
+        // 🚀 強力なBaseタグ挿入
         html = html.replace(/<head>/i, `<head><base href="${origin}/">`);
 
-        // 2. リンクの書き換え（魔法の一手）
-        // ページ内の href="http..." を href="自分のプロキシ?url=http..." に置換する
-        // これにより、ウィンドウ内のクリックもプロキシを通るようになる
-        const proxyPrefix = `${serverUrl}/proxy?url=`;
-        html = html.replace(/(href|src)="(https?:\/\/[^"]+)"/g, (match, p1, p2) => {
-            return `${p1}="${proxyPrefix}${encodeURIComponent(p2)}"`;
-        });
+        // 🚀 セキュリティガード（X-Frame-Optionsなど）を無効化するスクリプトを注入
+        const injection = `
+            <script>
+                // リンククリックを全奪取してプロキシ経由にする
+                document.addEventListener('click', e => {
+                    const a = e.target.closest('a');
+                    if (a && a.href && a.href.startsWith('http')) {
+                        e.preventDefault();
+                        window.location.href = window.location.origin + "/proxy?url=" + encodeURIComponent(a.href);
+                    }
+                }, true);
+            </script>
+        `;
+        html = html.replace(/<\/head>/i, `${injection}</head>`);
 
+        // ブラウザのブロックを避けるためのヘッダー
         res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;");
         res.send(html);
     } catch (e) {
@@ -43,9 +54,4 @@ app.get('/proxy', async (req, res) => {
     }
 });
 
-app.get('/video-stream', async (req, res) => {
-    // 現在YouTube解析エンジンを再構築中
-    res.send("YouTube Stream Engine: Initializing... Try again later.");
-});
-
-app.listen(port, () => console.log(`Nexus Server Online: ${port}`));
+app.listen(port, () => console.log(`Nexus Engine: Active`));

@@ -5,7 +5,7 @@ import { WindowManager } from '../os/windows.js';
 
 export class NexusMaster {
     constructor() {
-        this.version = "1.3.1-Beta";
+        this.version = "1.3.2-Stable";
         this.serverUrl = "https://cca3af0f-34bf-4500-a3da-ac5a034fb110-00-3dcqrois903qa.sisko.replit.dev";
         this.visual = new VisualCore();
         this.input = new VirtualPad();
@@ -28,7 +28,6 @@ export class NexusMaster {
             appDrawer.classList.toggle('hidden');
         };
 
-        // 📺 YouTubeを「プロキシ経由のブラウザ窓」で開くように変更
         document.getElementById('launch-yt').onclick = () => {
             appDrawer.classList.add('hidden');
             this.openWebBrowser("https://m.youtube.com");
@@ -44,7 +43,7 @@ export class NexusMaster {
         const browserHtml = `
             <div style="display:flex; flex-direction:column; height:100%; background:#111;">
                 <div style="padding:10px; display:flex; gap:5px; background:#222;">
-                    <input type="text" id="browser-url" value="${initialUrl}" style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:8px; border-radius:6px; outline:none;">
+                    <input type="text" id="browser-url" value="${initialUrl}" placeholder="URL or Search..." style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:8px; border-radius:6px; outline:none; font-size:14px;">
                     <button id="browser-go" style="background:#0ff; color:#000; border:none; padding:0 15px; border-radius:6px; font-weight:bold;">GO</button>
                 </div>
                 <iframe id="browser-viewport" src="about:blank" style="flex-grow:1; border:none; background:white;"></iframe>
@@ -58,6 +57,10 @@ export class NexusMaster {
         const load = () => {
             let url = input.value.trim();
             if(!url) return;
+            // 簡易検索機能：ドットがなければBing検索へ飛ばす
+            if(!url.includes('.')) url = "https://www.bing.com/search?q=" + encodeURIComponent(url);
+            if(!url.startsWith('http')) url = "https://" + url;
+
             iframe.src = `${this.serverUrl}/proxy?url=${encodeURIComponent(url)}`;
         };
 
