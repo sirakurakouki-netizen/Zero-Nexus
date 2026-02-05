@@ -4,19 +4,19 @@ import { Player } from '../entities/player.js';
 import { WindowManager } from '../os/windows.js';
 
 /**
- * NexusMaster - Version 1.0.2-Alpha
- * [OS Evolution Update]
- * ゲーム機能とOSマルチタスク機能を完全統合。
+ * NexusMaster - Version 1.0.3-Alpha
+ * [Proxy & Logic Link Update]
+ * 仮想ブラウザのプロキシ連携とOSコントロールの強化。
  */
 export class NexusMaster {
     constructor() {
-        this.version = "1.0.2-Alpha";
+        this.version = "1.0.3-Alpha";
 
-        // 1. 各システム（器）のインスタンス化
+        // システム初期化
         this.visual = new VisualCore();
         this.input = new VirtualPad();
         this.player = new Player(this.visual);
-        this.winManager = new WindowManager(); // OS窓管理システムの導入
+        this.winManager = new WindowManager();
 
         // 共通データ
         this.currency = 0;
@@ -29,12 +29,12 @@ export class NexusMaster {
     boot() {
         console.log(`[Zero-Nexus] System Booting: ${this.version}`);
 
-        // 各モジュールの初期化
+        // モジュール群の初期化
         this.visual.init();
         this.input.init();
         this.player.init();
 
-        // OSボタンのイベント紐付け
+        // UIイベントの紐付け
         this.setupOSControls();
 
         // メインループ開始
@@ -44,19 +44,19 @@ export class NexusMaster {
     }
 
     /**
-     * OSインターフェースの制御
+     * OSインターフェース（ボタン）の制御
      */
     setupOSControls() {
-        // YouTube起動ボタン
+        // YouTube起動
         const ytBtn = document.getElementById('launch-yt');
         if (ytBtn) {
             ytBtn.onclick = () => {
-                // デフォルトで特定の動画（または検索窓）を開く
-                this.winManager.openYouTube("dQw4w9WgXcQ"); // テスト用ID
+                // デフォルト動画（Rickrollはテストの基本）
+                this.winManager.openYouTube("dQw4w9WgXcQ");
             };
         }
 
-        // 仮想ブラウザ起動ボタン
+        // 仮想ブラウザ起動
         const browserBtn = document.getElementById('launch-browser');
         if (browserBtn) {
             browserBtn.onclick = () => {
@@ -64,7 +64,7 @@ export class NexusMaster {
             };
         }
 
-        // 戦闘HUDのデモ（思想：報酬システムの確認用）
+        // 戦闘HUDの報酬テスト
         const attackBtn = document.getElementById('btn-attack');
         if (attackBtn) {
             attackBtn.onclick = () => this.addReward(10, "play");
@@ -72,31 +72,36 @@ export class NexusMaster {
     }
 
     /**
-     * 仮想ブラウザ窓の生成（思想：ネットサーフィン機能）
+     * 仮想ブラウザ窓の生成（プロキシ連携版）
      */
     openWebBrowser() {
         const browserHtml = `
             <div style="display:flex; flex-direction:column; height:100%; background:#111;">
-                <div style="padding:5px; display:flex; gap:5px;">
-                    <input type="text" id="browser-url" placeholder="https://..." 
-                        style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:2px 5px; font-size:10px;">
-                    <button id="browser-go" style="background:#0ff; color:#000; border:none; padding:0 10px; font-size:10px; font-weight:bold;">GO</button>
+                <div style="padding:5px; display:flex; gap:5px; background:#222;">
+                    <input type="text" id="browser-url" placeholder="google.com" 
+                        style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:4px 8px; font-size:12px; border-radius:4px;">
+                    <button id="browser-go" style="background:#0ff; color:#000; border:none; padding:0 12px; font-size:12px; font-weight:bold; border-radius:4px;">GO</button>
                 </div>
-                <iframe id="browser-viewport" src="about:blank" style="flex-grow:1; border:none; background:white;"></iframe>
+                <iframe id="browser-viewport" src="about:blank" 
+                    style="flex-grow:1; border:none; background:white; width:100%; height:100%;"></iframe>
             </div>
         `;
-        const win = this.winManager.createWindow("Web Browser / 仮想ブラウザ", browserHtml, { width: 400, height: 300, x: 50, y: 150 });
+        const win = this.winManager.createWindow("Web Browser / 仮想ブラウザ", browserHtml, { width: 450, height: 320, x: 50, y: 120 });
 
-        // URL遷移ロジック（※プロキシが必要な場合は後にindex.jsと連携）
         const goBtn = win.querySelector('#browser-go');
         const input = win.querySelector('#browser-url');
         const iframe = win.querySelector('#browser-viewport');
 
         goBtn.onclick = () => {
             let url = input.value;
+            if (!url) return;
             if (!url.startsWith('http')) url = 'https://' + url;
-            iframe.src = url; 
-            console.log(`[Browser] Navigating to: ${url}`);
+
+            // 🛡️ 重要：サーバー側の/proxyエンドポイントを経由させる
+            // これによりX-Frame-Options制限を回避して表示を試みる
+            iframe.src = `/proxy?url=${encodeURIComponent(url)}`;
+
+            console.log(`[Browser] Proxying: ${url}`);
         };
     }
 
@@ -106,16 +111,22 @@ export class NexusMaster {
     tick() {
         requestAnimationFrame(() => this.tick());
 
+        // プレイヤー移動の更新（入力値を渡す）
         const movementInput = this.input.getMovement();
         this.player.update(movementInput);
+
+        // 描画更新
         this.visual.update();
     }
 
     /**
-     * 報酬システム
+     * 報酬・経済システム
      */
     addReward(amount, type = "play") {
-        let multiplier = (type === "clear") ? 1.0 : (type === "fail") ? 0.3 : 0.1;
+        let multiplier = 0.1;
+        if (type === "clear") multiplier = 1.0;
+        if (type === "fail") multiplier = 0.3;
+
         const gained = Math.floor(amount * multiplier);
         this.currency += gained;
 
