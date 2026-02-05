@@ -5,7 +5,7 @@ import { WindowManager } from '../os/windows.js';
 
 export class NexusMaster {
     constructor() {
-        this.version = "1.4.0-StreamFocus";
+        this.version = "1.4.1-Fixed";
         this.serverUrl = "https://cca3af0f-34bf-4500-a3da-ac5a034fb110-00-3dcqrois903qa.sisko.replit.dev";
         this.visual = new VisualCore();
         this.input = new VirtualPad();
@@ -28,7 +28,6 @@ export class NexusMaster {
             appDrawer.classList.toggle('hidden');
         };
 
-        // 📺 ストリーミングプレイヤーを起動
         document.getElementById('launch-yt').onclick = () => {
             appDrawer.classList.add('hidden');
             this.openNexusPlayer();
@@ -42,51 +41,74 @@ export class NexusMaster {
 
     openNexusPlayer() {
         const playerHtml = `
-            <div style="display:flex; flex-direction:column; height:100%; background:#000; color:#0ff;">
+            <div style="display:flex; flex-direction:column; height:100%; background:#000; color:#0ff; font-family:monospace;">
                 <div style="padding:10px; display:flex; gap:5px; background:#111;">
-                    <input type="text" id="yt-url" placeholder="Paste YouTube URL here..." 
-                        style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:8px; border-radius:6px; font-size:12px;">
+                    <input type="text" id="yt-url" placeholder="Paste YouTube Link..." 
+                        style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:8px; border-radius:6px;">
                     <button id="yt-play" style="background:#0ff; color:#000; border:none; padding:0 15px; border-radius:6px; font-weight:bold;">PLAY</button>
                 </div>
-                <div style="flex-grow:1; display:flex; justify-content:center; align-items:center; position:relative; overflow:hidden;">
-                    <video id="nexus-video-player" controls style="width:100%; height:100%; object-fit:contain; display:none;"></video>
-                    <div id="loader" style="color:#0ff; font-family:monospace; text-align:center;">
-                        <p>Nexus Streaming Engine</p>
-                        <p style="font-size:10px; opacity:0.7;">Waiting for Input...</p>
+                <div id="v-display" style="flex-grow:1; display:flex; justify-content:center; align-items:center; background:#000; position:relative;">
+                    <div id="v-loader" style="text-align:center;">
+                        <p id="v-msg">Nexus Video Ready</p>
                     </div>
+                    <video id="v-player" controls playsinline style="display:none; width:100%; height:100%;"></video>
                 </div>
             </div>
         `;
         const win = this.winManager.createWindow("Nexus Video", playerHtml, { width: 480, height: 320, x: 20, y: 50 });
         const playBtn = win.querySelector('#yt-play');
         const input = win.querySelector('#yt-url');
-        const video = win.querySelector('#nexus-video-player');
-        const loader = win.querySelector('#loader');
+        const video = win.querySelector('#v-player');
+        const msg = win.querySelector('#v-msg');
 
         playBtn.onclick = () => {
             const url = input.value.trim();
             if(!url) return;
 
-            loader.innerHTML = "<p>Analyzing Stream...</p><p style='font-size:10px;'>Fetching data from Replit Server</p>";
+            msg.innerText = "Connecting to Server...";
             video.style.display = "none";
 
-            // 🚀 サーバーのエンドポイントを叩く
-            video.src = `${this.serverUrl}/video-stream?url=${encodeURIComponent(url)}`;
+            // 重要：キャッシュを避けるためにタイムスタンプを付与
+            video.src = `${this.serverUrl}/video-stream?url=${encodeURIComponent(url)}&t=${Date.now()}`;
+            video.load();
 
-            video.oncanplay = () => {
-                loader.style.display = "none";
+            video.onplaying = () => {
+                msg.style.display = "none";
                 video.style.display = "block";
-                video.play();
             };
 
-            video.onerror = () => {
-                loader.innerHTML = "<p style='color:red;'>Stream Error</p><p style='font-size:10px;'>The server couldn't bypass the restriction.</p>";
+            video.onerror = (e) => {
+                msg.innerText = "Stream Error: Server Blocked.";
+                console.error("Video Error", video.error);
             };
         };
     }
 
     openWebBrowser(initialUrl = "") {
-        // ... (前のプロキシブラウザコードと同じ)
+        const browserHtml = `
+            <div style="display:flex; flex-direction:column; height:100%; background:#111;">
+                <div style="padding:10px; display:flex; gap:5px; background:#222;">
+                    <input type="text" id="b-url" value="${initialUrl}" style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:8px; border-radius:6px;">
+                    <button id="b-go" style="background:#0ff; color:#000; border:none; padding:0 15px; border-radius:6px; font-weight:bold;">GO</button>
+                </div>
+                <iframe id="b-view" style="flex-grow:1; border:none; background:white;"></iframe>
+            </div>
+        `;
+        const win = this.winManager.createWindow("Nexus Browser", browserHtml, { width: 500, height: 400, x: 10, y: 40 });
+        const goBtn = win.querySelector('#b-go');
+        const input = win.querySelector('#b-url');
+        const iframe = win.querySelector('#b-view');
+
+        const load = () => {
+            let url = input.value.trim();
+            if(!url) return;
+            if(!url.includes('.')) url = "https://www.bing.com/search?q=" + encodeURIComponent(url);
+            if(!url.startsWith('http')) url = "https://" + url;
+            iframe.src = `${this.serverUrl}/proxy?url=${encodeURIComponent(url)}`;
+        };
+
+        goBtn.onclick = load;
+        if(initialUrl) load();
     }
 
     tick() {
