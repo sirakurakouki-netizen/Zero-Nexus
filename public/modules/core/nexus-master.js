@@ -5,8 +5,8 @@ import { WindowManager } from '../os/windows.js';
 
 export class NexusMaster {
     constructor() {
-        this.version = "1.2.5-Hybrid";
-        // 🚀 君のReplitサーバーURL（末尾のスラッシュなし）
+        this.version = "1.3.0-Stable";
+        // 🚀 君のReplit実行用URL（ここが間違っていると404や通信不可になる）
         this.serverUrl = "https://cca3af0f-34bf-4500-a3da-ac5a034fb110-00-3dcqrois903qa.sisko.replit.dev";
 
         this.visual = new VisualCore();
@@ -43,24 +43,28 @@ export class NexusMaster {
 
     openVideoPlayer() {
         const playerHtml = `
-            <div style="display:flex; flex-direction:column; height:100%; background:#000; color:#0ff;">
+            <div style="display:flex; flex-direction:column; height:100%; background:#000; color:#0ff; font-family:monospace;">
                 <div style="padding:10px; display:flex; gap:5px; background:#111;">
-                    <input type="text" id="video-url" placeholder="YouTube URL..." 
-                        style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:5px; border-radius:4px; font-size:12px;">
+                    <input type="text" id="video-url" placeholder="Paste YouTube URL..." 
+                        style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:5px; border-radius:4px;">
                     <button id="video-load" style="background:#0ff; color:#000; border:none; padding:0 10px; border-radius:4px; font-weight:bold;">LOAD</button>
                 </div>
-                <video id="nexus-video" controls autoplay style="width:100%; flex-grow:1;"></video>
+                <div style="flex-grow:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                    <video id="nexus-video" controls autoplay style="width:100%; max-height:80%;"></video>
+                    <p style="font-size:10px; color:#555; margin-top:5px;">Streaming via Nexus Server</p>
+                </div>
             </div>
         `;
-        const win = this.winManager.createWindow("Nexus Stream", playerHtml, { width: 450, height: 300, x: 50, y: 50 });
+        const win = this.winManager.createWindow("Nexus Stream", playerHtml, { width: 450, height: 350, x: 20, y: 60 });
         const loadBtn = win.querySelector('#video-load');
         const input = win.querySelector('#video-url');
         const video = win.querySelector('#nexus-video');
 
         loadBtn.onclick = () => {
-            if(!input.value.trim()) return;
-            // サーバーURLを明示的に指定
-            video.src = `${this.serverUrl}/video-stream?url=${encodeURIComponent(input.value.trim())}`;
+            const rawUrl = input.value.trim();
+            if(!rawUrl) return;
+            // サーバーを介してストリーミング。ここが404ならReplitが止まっている。
+            video.src = `${this.serverUrl}/video-stream?url=${encodeURIComponent(rawUrl)}`;
         };
     }
 
@@ -80,7 +84,6 @@ export class NexusMaster {
         const iframe = win.querySelector('#browser-viewport');
 
         goBtn.onclick = () => {
-            // サーバーURLを明示的に指定
             iframe.src = `${this.serverUrl}/proxy?url=${encodeURIComponent(input.value.trim())}`;
         };
         if(initialUrl) goBtn.onclick();
