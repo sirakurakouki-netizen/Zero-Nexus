@@ -28,15 +28,21 @@
             </div>
         </div>
 
-        <div id="app-launcher">
-            <button id="launch-yt" class="app-btn">
-                <span class="material-icons">play_circle</span>
-                <span class="btn-label">YT</span>
+        <div id="main-launcher">
+            <button id="nexus-menu-btn" class="main-btn">
+                <span class="material-icons">apps</span>
             </button>
-            <button id="launch-browser" class="app-btn">
-                <span class="material-icons">language</span>
-                <span class="btn-label">Web</span>
-            </button>
+
+            <div id="app-drawer" class="hidden">
+                <button id="launch-yt" class="drawer-item">
+                    <span class="material-icons">play_circle</span>
+                    <span>YouTube</span>
+                </button>
+                <button id="launch-browser" class="drawer-item">
+                    <span class="material-icons">language</span>
+                    <span>Web Browser</span>
+                </button>
+                </div>
         </div>
 
         <div id="battle-hud">
@@ -61,13 +67,9 @@
 
     <script type="module">
         import { NexusMaster } from './modules/core/nexus-master.js';
-
         window.addEventListener('load', () => {
-            console.log("Nexus OS Booting...");
             const zeroNexus = new NexusMaster();
             zeroNexus.boot();
-
-            // ボタンイベントをグローバルに登録（後でNexusMasterから制御可能にする）
             window.zeroNexus = zeroNexus;
         });
     </script>

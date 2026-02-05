@@ -1,39 +1,27 @@
 const express = require('express');
-const axios = require('axios'); // プロキシ通信用
-const path = require('path');
+const axios = require('axios');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// publicフォルダを静的ファイルとして公開
 app.use(express.static('public'));
 
-/**
- * 🌐 Nexus Proxy Engine
- * 仮想ブラウザが制限を回避してサイトを読み込むためのエンドポイント
- */
-app.get('/proxy', async (req, res) => {
-    const targetUrl = req.query.url;
-    if (!targetUrl) return res.send("No URL provided.");
+app.get('/nexus-tunnel', async (req, res) => {
+    let targetUrl = req.query.url;
+    if (!targetUrl) return res.status(400).send("No URL provided.");
+    if (!targetUrl.startsWith('http')) targetUrl = 'https://' + targetUrl;
 
     try {
-        console.log(`[Proxy] Requesting: ${targetUrl}`);
         const response = await axios.get(targetUrl, {
-            responseType: 'text',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1'
             }
         });
-
-        // 取得したHTMLのリンクなどを相対パスから絶対パスに書き換える簡易処理
-        // (本来はもっと複雑だが、まずは基礎を実装)
-        let html = response.data;
-        res.send(html);
-
-    } catch (error) {
-        res.status(500).send("Proxy Error: " + error.message);
+        // 余計な処理をせず、受け取ったデータをそのまま流す（バイパス）
+        res.setHeader('Content-Type', response.headers['content-type']);
+        res.send(response.data);
+    } catch (e) {
+        res.status(500).send("Tunnel Error: " + e.message);
     }
 });
 
-app.listen(port, () => {
-    console.log(`[Zero-Nexus] OS Server running at http://localhost:${port}`);
-});
+app.listen(port, () => console.log(`Nexus Server V3 Online`));
