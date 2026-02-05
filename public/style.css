@@ -1,10 +1,10 @@
-/* Nexus OS - System Visual Protocol */
+/* Nexus OS - System Visual Protocol V2 */
 
 :root {
     --neon-blue: #00ffff;
     --neon-dark: #0055ff;
     --bg-black: #000000;
-    --ui-glass: rgba(0, 0, 0, 0.7);
+    --ui-glass: rgba(0, 0, 0, 0.75);
     --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -12,19 +12,20 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent; /* スマホのタップ青枠を消す */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none; /* UIを長押しして選択されないようにする（スマホ対策） */
 }
 
 body, html {
     width: 100%;
     height: 100%;
-    overflow: hidden; /* スクロール禁止（OSとしての挙動） */
+    overflow: hidden;
     background-color: var(--bg-black);
     color: white;
     font-family: var(--font-main);
 }
 
-/* 3Dキャンバスのコンテナ */
+/* 3Dキャンバス */
 #game-canvas-container {
     position: fixed;
     top: 0;
@@ -34,7 +35,7 @@ body, html {
     z-index: 1;
 }
 
-/* UIレイヤー（3Dの上に重なる） */
+/* UIレイヤー */
 #nexus-ui-layer {
     position: fixed;
     top: 0;
@@ -42,88 +43,145 @@ body, html {
     width: 100%;
     height: 100%;
     z-index: 10;
-    pointer-events: none; /* 下の3Dに触れるように、UI要素以外は透過 */
+    pointer-events: none;
 }
 
-/* 全てのボタンや窓は触れるようにする */
 #nexus-ui-layer > * {
     pointer-events: auto;
 }
 
-/* ステータスバー（上部） */
+/* 上部ステータスバー */
 #status-bar {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    padding: 10px 20px;
-    background: linear-gradient(to bottom, rgba(0,255,255,0.2), transparent);
+    padding: 8px 15px;
+    background: linear-gradient(to bottom, rgba(0,255,255,0.15), transparent);
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid var(--neon-blue);
-    font-size: 14px;
-    letter-spacing: 1px;
-    text-shadow: 0 0 5px var(--neon-blue);
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+    font-size: 13px;
+    text-shadow: 0 0 8px var(--neon-blue);
 }
 
-/* 戦闘HUD (日英併記・ネオンボタン) */
+/* アプリランチャー（左側：YouTube/Web） */
+#app-launcher {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.app-btn {
+    width: 55px;
+    height: 55px;
+    background: var(--ui-glass);
+    border: 1px solid var(--neon-blue);
+    border-radius: 12px;
+    color: var(--neon-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(0, 85, 255, 0.5);
+    transition: 0.1s;
+}
+
+.app-btn:active {
+    background: var(--neon-blue);
+    color: black;
+    transform: scale(0.9);
+}
+
+.btn-label {
+    font-size: 9px;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+/* 戦闘HUD（右側） */
 #battle-hud {
     position: absolute;
-    bottom: 40px;
+    bottom: 30px;
     right: 20px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
 }
 
-#battle-hud button {
-    width: 120px;
-    height: 50px;
+.hud-btn {
+    width: 160px;
+    height: 55px;
     background: var(--ui-glass);
     border: 1px solid var(--neon-blue);
+    border-radius: 30px 5px 30px 5px; /* 特徴的なカット */
     color: var(--neon-blue);
-    font-weight: bold;
-    border-radius: 5px;
-    box-shadow: 0 0 10px var(--neon-dark);
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    gap: 10px;
+    box-shadow: -5px 0 15px rgba(0, 255, 255, 0.2);
     transition: 0.2s;
 }
 
-#battle-hud button:active {
-    background: var(--neon-blue);
-    color: black;
-    transform: scale(0.95);
+.hud-btn .btn-text {
+    font-size: 12px;
+    font-weight: bold;
 }
 
-/* 仮想スティック（input/virtual-pad.jsで使用） */
+.hud-btn:active {
+    background: rgba(0, 255, 255, 0.3);
+    transform: translateX(-5px);
+}
+
+/* 仮想スティック（位置調整） */
 #joystick-container {
     position: absolute;
-    bottom: 50px;
-    left: 50px;
-    width: 120px;
-    height: 120px;
-    border: 2px dashed var(--neon-dark);
+    bottom: 40px;
+    left: 40px;
+    width: 130px;
+    height: 130px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
     border-radius: 50%;
-    opacity: 0.6;
+    background: rgba(0, 255, 255, 0.03);
 }
 
-/* OS Window - YouTubeやプロキシ用 */
+/* ウィンドウ基本デザイン */
 .nexus-window {
     position: absolute;
-    top: 100px;
-    left: 50px;
-    width: 300px;
-    height: 200px;
     background: var(--ui-glass);
     border: 1px solid var(--neon-blue);
-    border-radius: 8px;
-    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 1);
+    backdrop-filter: blur(10px);
 }
 
 .window-header {
-    padding: 5px;
-    background: var(--neon-dark);
-    font-size: 12px;
-    cursor: move;
+    background: rgba(0, 255, 255, 0.15);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.window-content {
+    flex-grow: 1;
+    background: black;
+}
+
+.win-close {
+    background: none;
+    border: none;
+    color: #ff4444;
+    font-size: 20px;
+    font-weight: bold;
 }

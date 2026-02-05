@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zero-Nexus | Nexus OS</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
     <script type="importmap">
         {
             "imports": {
@@ -16,23 +18,42 @@
 </head>
 <body>
     <div id="nexus-ui-layer">
-        <div id="os-overlay">
-            <div id="status-bar">
+        <div id="status-bar">
+            <div class="user-info">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">account_circle</span>
                 <span id="player-name">Zero-User</span>
+            </div>
+            <div class="system-info">
                 <span id="credits">Credits: 0</span>
             </div>
         </div>
 
-        <div id="battle-hud" style="display: none;">
-            <button id="btn-attack">Attack / 攻撃</button>
-            <button id="btn-skill">Skill / 技</button>
+        <div id="app-launcher">
+            <button id="launch-yt" class="app-btn">
+                <span class="material-icons">play_circle</span>
+                <span class="btn-label">YT</span>
+            </button>
+            <button id="launch-browser" class="app-btn">
+                <span class="material-icons">language</span>
+                <span class="btn-label">Web</span>
+            </button>
+        </div>
+
+        <div id="battle-hud">
+            <button id="btn-attack" class="hud-btn">
+                <span class="material-icons">bolt</span>
+                <span class="btn-text">Attack / 攻撃</span>
+            </button>
+            <button id="btn-skill" class="hud-btn">
+                <span class="material-icons">auto_fix_high</span>
+                <span class="btn-text">Skill / 技</span>
+            </button>
         </div>
 
         <div id="joystick-container"></div>
     </div>
 
-    <div id="game-canvas-container">
-        </div>
+    <div id="game-canvas-container"></div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -42,10 +63,12 @@
         import { NexusMaster } from './modules/core/nexus-master.js';
 
         window.addEventListener('load', () => {
-            console.log("Nexus OS Initializing...");
-            // OSの統括クラスを起動
+            console.log("Nexus OS Booting...");
             const zeroNexus = new NexusMaster();
             zeroNexus.boot();
+
+            // ボタンイベントをグローバルに登録（後でNexusMasterから制御可能にする）
+            window.zeroNexus = zeroNexus;
         });
     </script>
 </body>
