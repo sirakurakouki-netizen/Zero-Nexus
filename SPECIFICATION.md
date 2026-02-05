@@ -1052,3 +1052,5 @@ https://raw.githack.com/sirakurakouki-netizen/Zero-Nexus/main/public/index.html
 replitのwebviewのurl
 
 https://cca3af0f-34bf-4500-a3da-ac5a034fb110-00-3dcqrois903qa.sisko.replit.dev/
+
+「これからはGithackでサイトの実行結果を確認するようにする。」めっちゃ大事だから覚えておいて。
