@@ -17,36 +17,36 @@ app.get('/proxy', async (req, res) => {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
             },
-            timeout: 15000,
-            validateStatus: false // エラーコードが返ってきても中身を表示する
+            timeout: 15000
         });
 
         let html = response.data;
-        if (typeof html !== 'string') {
-            return res.send("This content cannot be displayed as HTML.");
-        }
-
         const origin = new URL(targetUrl).origin;
+        const serverUrl = `https://${req.get('host')}`;
 
-        // 🚀 強力なBaseタグ挿入
+        // 🚀 Baseタグで画像・CSSのパスを解決
         html = html.replace(/<head>/i, `<head><base href="${origin}/">`);
 
-        // 🚀 セキュリティガード（X-Frame-Optionsなど）を無効化するスクリプトを注入
-        const injection = `
+        // 🚀 全てのリンク（href）をプロキシ経由に書き換え
+        // aタグのhrefだけでなく、フォームのactionなども対象にする
+        html = html.replace(/(href|action)="(https?:\/\/[^"]+)"/g, (match, p1, p2) => {
+            return `${p1}="${serverUrl}/proxy?url=${encodeURIComponent(p2)}"`;
+        });
+
+        // 🚀 JavaScriptによる「iframe脱出」を防ぐ
+        const antiLeak = `
             <script>
-                // リンククリックを全奪取してプロキシ経由にする
-                document.addEventListener('click', e => {
-                    const a = e.target.closest('a');
-                    if (a && a.href && a.href.startsWith('http')) {
-                        e.preventDefault();
-                        window.location.href = window.location.origin + "/proxy?url=" + encodeURIComponent(a.href);
-                    }
-                }, true);
+                // ページ遷移を監視し、すべてプロキシを通すように強制
+                window.onbeforeunload = null;
+                const originalOpen = window.open;
+                window.open = (url) => {
+                    const proxyUrl = "${serverUrl}/proxy?url=" + encodeURIComponent(url);
+                    return originalOpen(proxyUrl, '_self');
+                };
             </script>
         `;
-        html = html.replace(/<\/head>/i, `${injection}</head>`);
+        html = html.replace(/<\/head>/i, `${antiLeak}</head>`);
 
-        // ブラウザのブロックを避けるためのヘッダー
         res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;");
         res.send(html);
     } catch (e) {
@@ -54,4 +54,7 @@ app.get('/proxy', async (req, res) => {
     }
 });
 
-app.listen(port, () => console.log(`Nexus Engine: Active`));
+// 次回、ここをytdl-coreで本気で実装する
+app.get('/video-stream', (req, res) => res.send("Engine Updating..."));
+
+app.listen(port, () => console.log("Nexus Server: Fully Armed"));
