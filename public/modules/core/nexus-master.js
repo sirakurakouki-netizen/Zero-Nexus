@@ -5,8 +5,8 @@ import { WindowManager } from '../os/windows.js';
 
 export class NexusMaster {
     constructor() {
-        this.version = "1.6.5-Secure-Link";
-        // ★重要: GitHackからでも届くように絶対パスを強制
+        this.version = "1.7.5-Nexus-Protocol";
+        // 🛡️ 聖典に基づきReplitのURLを厳格に固定
         this.serverUrl = "https://cca3af0f-34bf-4500-a3da-ac5a034fb110-00-3dcqrois903qa.sisko.replit.dev";
 
         try {
@@ -14,17 +14,15 @@ export class NexusMaster {
             this.input = new VirtualPad();
             this.winManager = new WindowManager();
             this.player = new Player(this.visual);
-            console.log("Modules Loaded: Ready for Deployment");
+            console.log("Nexus OS Booting: All Modules Ready.");
         } catch (e) {
-            console.error("Critical Load Error:", e);
+            console.error("Boot Error:", e);
         }
     }
 
-    // iOS/Replit間でバグらないための安全なBase64
+    // 🛡️ iPad/iOSのSafariで記号が化けないためのBase64変換
     st(url) {
-        return btoa(encodeURIComponent(url).replace(/%([0-9A-F]{2})/g, (match, p1) => {
-            return String.fromCharCode('0x' + p1);
-        }));
+        return btoa(encodeURIComponent(url));
     }
 
     boot() {
@@ -54,63 +52,77 @@ export class NexusMaster {
 
     openStealthPlayer() {
         const html = `
-            <div style="background:#000; height:100%; display:flex; flex-direction:column; padding:15px;">
-                <input id="u" placeholder="YouTube URL..." style="width:100%; background:#111; color:#0ff; border:1px solid #0ff; padding:10px; border-radius:8px;">
-                <button id="p" style="width:100%; background:#0ff; color:#000; font-weight:bold; height:45px; margin-top:10px; border-radius:8px; border:none; cursor:pointer;">STREAM DECODE</button>
-                <div style="flex-grow:1; display:flex; align-items:center; justify-content:center; margin-top:10px; border:1px dashed #333;">
-                    <video id="v" controls playsinline preload="auto" style="width:100%; max-height:100%; display:none;"></video>
-                    <p id="msg" style="color:#0ff; font-size:12px;">Waiting for URL...</p>
+            <div style="background:#000; height:100%; display:flex; flex-direction:column; padding:15px; border-radius:10px;">
+                <input id="u" placeholder="YouTube URL..." style="width:100%; background:#111; color:#0ff; border:1px solid #0ff; padding:12px; border-radius:8px; font-size:16px;">
+                <button id="p" style="width:100%; background:#0ff; color:#000; font-weight:bold; height:48px; margin-top:10px; border-radius:8px; border:none;">LOAD DATA</button>
+                <div id="v-zone" style="flex-grow:1; display:flex; align-items:center; justify-content:center; margin-top:10px; background:#050505; border:1px solid #222; position:relative;">
+                    <video id="v" controls playsinline style="width:100%; height:100%; display:none;"></video>
+                    <div id="loader" style="color:#0ff; font-weight:bold; display:none;">DECODING...</div>
+                    <div id="info" style="color:#0ff; font-size:12px;">READY</div>
                 </div>
             </div>
         `;
-        const win = this.winManager.createWindow("Nexus Streamer", html, { width: 400, height: 350, x: 20, y: 50 });
+        const win = this.winManager.createWindow("Nexus Stream", html, { width: 380, height: 350, x: 20, y: 50 });
         const video = win.querySelector('#v');
         const btn = win.querySelector('#p');
-        const msg = win.querySelector('#msg');
+        const loader = win.querySelector('#loader');
+        const info = win.querySelector('#info');
 
         btn.onclick = () => {
-            const url = win.querySelector('#u').value.trim();
-            if(!url) return;
-            msg.innerText = "Bypassing Google Filters...";
+            const rawUrl = win.querySelector('#u').value.trim();
+            if(!rawUrl) return;
 
-            // 重要：キャッシュをクリアして新規リクエスト
+            loader.style.display = "block";
+            info.style.display = "none";
+            video.style.display = "none";
+
+            // iOS Safariのキャッシュをリセット
             video.pause();
-            video.removeAttribute('src');
+            video.removeAttribute("src");
             video.load();
 
-            const apiTarget = `${this.serverUrl}/api/v1/stream?d=${this.st(url)}`;
-            video.src = apiTarget;
-            video.style.display = "block";
-            msg.style.display = "none";
+            // リクエスト送信
+            const target = `${this.serverUrl}/api/v1/stream?d=${this.st(rawUrl)}`;
+            video.src = target;
 
-            video.play().catch(e => {
-                msg.style.display = "block";
-                msg.innerText = "iOS Security: Tap Play Button to start.";
-            });
+            video.oncanplay = () => {
+                loader.style.display = "none";
+                video.style.display = "block";
+                video.play().catch(() => {
+                    info.style.display = "block";
+                    info.innerText = "Tap Video to Play";
+                });
+            };
+
+            video.onerror = () => {
+                loader.style.display = "none";
+                info.style.display = "block";
+                info.innerText = "NETWORK ERROR: Core Rejected";
+            };
         };
     }
 
     openStealthBrowser(initialUrl) {
         const html = `
-            <div style="display:flex; flex-direction:column; height:100%;">
-                <div style="background:#111; padding:5px; display:flex; gap:5px;">
-                    <input id="url-in" value="${initialUrl}" style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:5px; font-size:12px;">
-                    <button id="go-btn" style="background:#0ff; border:none; padding:0 10px;">GO</button>
+            <div style="display:flex; flex-direction:column; height:100%; background:#000;">
+                <div style="display:flex; padding:8px; gap:8px; background:#111; border-bottom:1px solid #0ff;">
+                    <input id="url-in" value="${initialUrl}" style="flex-grow:1; background:#000; color:#0ff; border:1px solid #0ff; padding:8px; font-size:14px; border-radius:4px;">
+                    <button id="go-btn" style="background:#0ff; color:#000; border:none; padding:0 15px; border-radius:4px; font-weight:bold;">GO</button>
                 </div>
-                <iframe id="f" style="flex-grow:1; background:#fff; border:none;"></iframe>
+                <iframe id="f" style="flex-grow:1; border:none; background:#fff;"></iframe>
             </div>
         `;
-        const win = this.winManager.createWindow("Nexus Proxy", html, { width: 450, height: 400, x: 30, y: 70 });
+        const win = this.winManager.createWindow("Nexus Browser", html, { width: 450, height: 400, x: 30, y: 70 });
         const iframe = win.querySelector('#f');
         const input = win.querySelector('#url-in');
         const go = win.querySelector('#go-btn');
 
-        const loadUrl = (url) => {
+        const load = (url) => {
             iframe.src = `${this.serverUrl}/api/v1/fetch?d=${this.st(url)}`;
         };
 
-        go.onclick = () => loadUrl(input.value.trim());
-        loadUrl(initialUrl);
+        go.onclick = () => load(input.value.trim());
+        load(initialUrl);
     }
 
     tick() {
