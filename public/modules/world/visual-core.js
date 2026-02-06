@@ -1,47 +1,42 @@
-import * as THREE from 'three';
-import { CSS3DRenderer } from 'https://unpkg.com/three@0.160.0/examples/jsm/renderers/CSS3DRenderer.js';
-
 export class VisualCore {
-    constructor() {
+    constructor(config) {
+        this.config = config;
         this.scene = new THREE.Scene();
-        this.cssScene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        this.cssRenderer = new CSS3DRenderer();
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
     }
 
-    async init() {
-        // 1. CSS3D (YouTube用レイヤー)
-        this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
-        this.cssRenderer.domElement.style.position = 'absolute';
-        this.cssRenderer.domElement.style.top = '0';
-        this.cssRenderer.domElement.style.zIndex = '0'; // 背景側
-        document.body.appendChild(this.cssRenderer.domElement);
-
-        // 2. WebGL (ゲーム用レイヤー)
+    init() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.setClearColor(0x000000, 0); // 透明にしてCSS3Dを見せる
-        this.renderer.domElement.style.position = 'absolute';
-        this.renderer.domElement.style.top = '0';
-        this.renderer.domElement.style.zIndex = '1'; // 前面側
-        this.renderer.domElement.style.pointerEvents = 'none'; // クリックを下のYouTubeに通す
+        // 背景色
+        this.scene.background = new THREE.Color(this.config.WORLD.BG_COLOR);
         document.body.appendChild(this.renderer.domElement);
 
-        const ambient = new THREE.AmbientLight(0xffffff, 1.0);
-        this.scene.add(ambient);
+        this.camera.position.set(0, 5, 10);
+        this.camera.lookAt(0, 0, 0);
+
+        const sun = new THREE.DirectionalLight(0xffffff, 1);
+        sun.position.set(5, 10, 7);
+        this.scene.add(sun, new THREE.AmbientLight(0xffffff, 0.4));
 
         window.addEventListener('resize', () => {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
         });
     }
 
-    add(obj) { this.scene.add(obj); }
+    createGrid() {
+        const grid = new THREE.GridHelper(
+            this.config.WORLD.GRID_SIZE, 
+            this.config.WORLD.GRID_DIVISIONS, 
+            0x00ffff, 0x002222
+        );
+        this.scene.add(grid);
+    }
+
     render() {
         this.renderer.render(this.scene, this.camera);
-        this.cssRenderer.render(this.cssScene, this.camera);
     }
 }

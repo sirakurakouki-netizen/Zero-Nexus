@@ -2,43 +2,23 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Zero-Nexus</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Zero-Nexus OS v3.0</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; touch-action: none; }
+        canvas { display: block; }
+    </style>
 </head>
 <body>
-    <div id="os-ui">
-        <div id="server-status">
+    <div id="ui-layer">
+        <div id="status-bar">
             <div id="status-lamp"></div>
-            <span id="status-text">NODE: STANDBY</span>
+            <span id="status-text">SYSTEM BOOTING...</span>
         </div>
-
-        <button id="menu-btn">NEXUS MENU</button>
-
-        <div id="proxy-browser" class="draggable-window">
-            <div class="window-header" id="proxy-header">
-                <span class="nexus-tag">NEXUS PROXY / BYPASS</span>
-                <div class="window-controls">
-                    <button id="browser-close-btn">×</button>
-                </div>
-            </div>
-            <div class="browser-address-bar">
-                <input type="text" id="proxy-input" placeholder="YouTube ID or URL...">
-                <button id="nav-go">EXE</button>
-            </div>
-            <div class="window-content" id="browser-body">
-                <div id="proxy-status">MDM BYPASS READY...</div>
-            </div>
-        </div>
+        <button id="menu-btn" style="position:fixed; top:10px; right:10px; z-index:100; padding:10px; background:#0f0; border:none; color:#000; font-weight:bold;">MENU</button>
     </div>
-
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-            }
-        }
-    </script>
-    <script type="module" src="modules/core/nexus-master.js"></script>
+    <script type="module" src="./modules/core/nexus-master.js"></script>
 </body>
 </html>

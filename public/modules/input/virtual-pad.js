@@ -1,51 +1,73 @@
 export class VirtualPad {
-    constructor(engine) {
-        this.engine = engine;
-        this.base = document.getElementById('joystick-base');
-        this.stick = document.getElementById('joystick-stick');
+    constructor() {
+        this.active = false;
+        this.input = { x: 0, y: 0 };
+        this.lookInput = { x: 0, y: 0 };
         this.touchId = null;
+        this.lastX = 0;
+        this.lastY = 0;
     }
 
     init() {
-        // スティック基部（左下）にタッチが始まった時だけ反応
-        this.base.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.changedTouches[0];
-            this.touchId = touch.identifier;
-            this.handleInput(touch);
-        }, { passive: false });
+        // スティックの土台
+        this.base = document.createElement('div');
+        this.base.style.cssText = `position:fixed; bottom:50px; left:50px; width:120px; height:120px; background:rgba(0,255,255,0.1); border:2px solid #00ffff; border-radius:50%; z-index:9999; touch-action:none;`;
 
-        window.addEventListener('touchmove', (e) => {
-            const touch = Array.from(e.touches).find(t => t.identifier === this.touchId);
-            if (touch) {
-                e.preventDefault();
-                this.handleInput(touch);
-            }
-        }, { passive: false });
+        this.stick = document.createElement('div');
+        this.stick.style.cssText = `position:absolute; top:50%; left:50%; width:50px; height:50px; background:#00ffff; border-radius:50%; transform:translate(-50%,-50%); pointer-events:none;`;
 
-        const endHandler = (e) => {
-            const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
-            if (touch) {
-                this.touchId = null;
-                this.stick.style.transform = `translate(0px, 0px)`;
-                this.engine.inputVector.set(0, 0);
+        this.base.appendChild(this.stick);
+        document.body.appendChild(this.base);
+        this.setupEvents();
+    }
+
+    setupEvents() {
+        const handleStart = (e) => {
+            for (let t of e.changedTouches) {
+                const rect = this.base.getBoundingClientRect();
+                const dx = t.clientX - (rect.left + 60);
+                const dy = t.clientY - (rect.top + 60);
+                if (Math.sqrt(dx*dx + dy*dy) < 80) {
+                    this.active = true;
+                    this.touchId = t.identifier;
+                } else {
+                    this.lastX = t.clientX;
+                    this.lastY = t.clientY;
+                }
             }
         };
 
-        window.addEventListener('touchend', endHandler);
-        window.addEventListener('touchcancel', endHandler);
-    }
+        const handleMove = (e) => {
+            for (let t of e.touches) {
+                if (t.identifier === this.touchId) {
+                    const rect = this.base.getBoundingClientRect();
+                    this.input.x = (t.clientX - (rect.left + 60)) / 60;
+                    this.input.y = (t.clientY - (rect.top + 60)) / 60;
+                    const d = Math.sqrt(this.input.x**2 + this.input.y**2);
+                    if (d > 1) { this.input.x /= d; this.input.y /= d; }
+                    this.stick.style.transform = `translate(calc(-50% + ${this.input.x * 60}px), calc(-50% + ${this.input.y * 60}px))`;
+                } else {
+                    this.lookInput.x = (t.clientX - this.lastX) * 0.005;
+                    this.lookInput.y = (t.clientY - this.lastY) * 0.005;
+                    this.lastX = t.clientX;
+                    this.lastY = t.clientY;
+                }
+            }
+        };
 
-    handleInput(touch) {
-        const rect = this.base.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        let dx = touch.clientX - centerX;
-        let dy = touch.clientY - centerY;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const limit = rect.width / 2;
-        if (dist > limit) { dx *= limit / dist; dy *= limit / dist; }
-        this.stick.style.transform = `translate(${dx}px, ${dy}px)`;
-        this.engine.inputVector.set(dx / limit, dy / limit);
+        const handleEnd = (e) => {
+            for (let t of e.changedTouches) {
+                if (t.identifier === this.touchId) {
+                    this.active = false;
+                    this.touchId = null;
+                    this.input = { x: 0, y: 0 };
+                    this.stick.style.transform = `translate(-50%, -50%)`;
+                }
+            }
+        };
+
+        window.addEventListener('touchstart', handleStart, {passive: false});
+        window.addEventListener('touchmove', handleMove, {passive: false});
+        window.addEventListener('touchend', handleEnd);
     }
 }
