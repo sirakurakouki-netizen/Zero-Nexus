@@ -11,20 +11,15 @@ export class NexusMaster {
         this.windowManager = new WindowManager();
         this.yaw = 0;
         this.pitch = 0;
-        this.history = JSON.parse(localStorage.getItem('nexus_history') || '[]');
     }
 
     async init() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
         document.getElementById('world-container').appendChild(this.renderer.domElement);
-        this.scene.background = new THREE.Color(0x00050a);
-
         this.setupWorld();
         this.createPlayer();
         this.vPad.init();
         this.setupUIEvents();
-        this.checkServer();
         this.animate();
     }
 
@@ -36,10 +31,7 @@ export class NexusMaster {
 
     createPlayer() {
         this.player = new THREE.Group();
-        const body = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 16, 16),
-            new THREE.MeshStandardMaterial({ color: CONFIG.COLORS.SUB })
-        );
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshStandardMaterial({ color: CONFIG.COLORS.SUB }));
         body.scale.set(1, 2, 1);
         body.position.y = 1.0; 
         this.player.add(body);
@@ -48,51 +40,32 @@ export class NexusMaster {
 
     setupUIEvents() {
         document.getElementById('menu-btn').onclick = () => {
-            const mode = prompt(
-                "🛡️ Nexus OS Menu\n" +
-                "1: YouTube Stream (ID入力)\n" +
-                "2: High-Speed Proxy (URL入力)\n" +
-                "3: History (履歴表示)\n" +
-                "4: Downloader Test", "1"
-            );
+            const mode = prompt("1: YouTube (URL or ID)\n2: Web Proxy (URL)\n3: Google Search (Proxy)");
 
             if (mode === "1") {
-                const ytId = prompt("YouTube Video ID");
-                if (ytId) this.windowManager.createWindow('Nexus Stream', `https://www.youtube.com/embed/${ytId}?autoplay=1`);
+                const input = prompt("YouTubeのURLまたは動画IDを入力");
+                if (input) {
+                    let id = input;
+                    if (input.includes('v=')) id = input.split('v=')[1].split('&')[0];
+                    if (input.includes('be/')) id = input.split('be/')[1].split('?')[0];
+
+                    const embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1`;
+                    this.windowManager.createWindow('Nexus Stream', embedUrl);
+                }
             } else if (mode === "2") {
-                const targetUrl = prompt("閲覧したいURL (https://... )");
-                if (targetUrl) {
-                    this.saveHistory(targetUrl);
-                    const proxyUrl = `${CONFIG.SERVER_URL}/proxy?url=${encodeURIComponent(targetUrl)}`;
-                    this.windowManager.createWindow('Nexus Browser', proxyUrl);
+                const url = prompt("閲覧したいURL (https://...)");
+                if (url) {
+                    // プロキシを通さず直接開けるか試す（MDM回避用）
+                    this.windowManager.createWindow('Browser', url);
                 }
             } else if (mode === "3") {
-                alert("最近の履歴:\n" + this.history.join("\n"));
-            } else if (mode === "4") {
-                alert("ダウンローダーは現在サーバー側で構築中です。");
+                const q = prompt("Google検索ワード");
+                if (q) {
+                    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(q)}&igu=1`;
+                    this.windowManager.createWindow('Search', searchUrl);
+                }
             }
         };
-    }
-
-    saveHistory(url) {
-        this.history.unshift(url);
-        if (this.history.length > 5) this.history.pop();
-        localStorage.setItem('nexus_history', JSON.stringify(this.history));
-    }
-
-    async checkServer() {
-        const lamp = document.getElementById('node-lamp');
-        const status = document.getElementById('node-status');
-        try {
-            const res = await fetch(`${CONFIG.SERVER_URL}/ping`);
-            if (res.ok) {
-                lamp.style.color = '#00ff00';
-                status.innerText = 'ONLINE';
-            }
-        } catch (e) {
-            lamp.style.color = '#ff0000';
-            status.innerText = 'OFFLINE';
-        }
     }
 
     animate() {
