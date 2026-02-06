@@ -1,13 +1,14 @@
 export const CONFIG = {
-    SERVER_URL: window.location.origin, // 自動で自分のサーバーを指す
-    WORLD: {
-        BG_COLOR: 0x000810,
-        GRID_SIZE: 100,
-        GRID_DIVISIONS: 50
-    },
+    // ReplitのURLを設定（GitHackから通信するため）
+    SERVER_URL: 'https://cca3af0f-34bf-4500-a3da-ac5a034fb110-00-3dcqrois903qa.sisko.replit.dev',
     PLAYER: {
-        COLOR: 0xff00ff,
-        RADIUS: 0.5,
-        SPEED: 0.15
+        HEIGHT: 1.0,
+        SPEED: 0.15,
+        JUMP_FORCE: 0.2
+    },
+    COLORS: {
+        MAIN: 0x00ffff,
+        SUB: 0xff00ff,
+        GROUND: 0x002222
     }
 };

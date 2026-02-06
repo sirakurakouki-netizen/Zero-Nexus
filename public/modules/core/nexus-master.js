@@ -1,5 +1,6 @@
+import { CONFIG } from './config.js';
 import { VirtualPad } from '../input/virtual-pad.js';
-import { CombatUI } from '../nexus-apps/combat-ui.js';
+import { WindowManager } from './window-manager.js';
 
 export class NexusMaster {
     constructor() {
@@ -7,290 +8,117 @@ export class NexusMaster {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.vPad = new VirtualPad();
-        this.combat = new CombatUI(this);
-
-        this.velocity = new THREE.Vector3();
-        this.yaw = 0;   
-        this.pitch = 0; 
-        this.isJumping = false;
-        this.isAttacking = false;
-        this.isGuarding = false;
+        this.windowManager = new WindowManager();
+        this.yaw = 0;
+        this.pitch = 0;
+        this.history = JSON.parse(localStorage.getItem('nexus_history') || '[]');
     }
 
     async init() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(this.renderer.domElement);
-        this.scene.background = new THREE.Color(0x000810);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('world-container').appendChild(this.renderer.domElement);
+        this.scene.background = new THREE.Color(0x00050a);
 
-        this.scene.add(new THREE.GridHelper(100, 50, 0x00ffff, 0x002222));
-        this.scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-
+        this.setupWorld();
         this.createPlayer();
         this.vPad.init();
-        this.combat.init();
+        this.setupUIEvents();
+        this.checkServer();
         this.animate();
+    }
+
+    setupWorld() {
+        const grid = new THREE.GridHelper(100, 50, CONFIG.COLORS.MAIN, 0x001111);
+        this.scene.add(grid);
+        this.scene.add(new THREE.AmbientLight(0xffffff, 1.2));
     }
 
     createPlayer() {
         this.player = new THREE.Group();
-
-        // 胴体
         const body = new THREE.Mesh(
             new THREE.SphereGeometry(0.5, 16, 16),
-            new THREE.MeshStandardMaterial({ color: 0xff00ff })
+            new THREE.MeshStandardMaterial({ color: CONFIG.COLORS.SUB })
         );
         body.scale.set(1, 2, 1);
         body.position.y = 1.0; 
         this.player.add(body);
-
-        // 武器（ネオン・ソード）
-        this.swordGroup = new THREE.Group();
-        const swordGeo = new THREE.BoxGeometry(0.1, 1.5, 0.1);
-        const swordMat = new THREE.MeshStandardMaterial({ 
-            color: 0x00ffff, 
-            emissive: 0x00ffff, 
-            emissiveIntensity: 2 
-        });
-        this.sword = new THREE.Mesh(swordGeo, swordMat);
-        this.sword.position.set(0.7, 1.2, 0.5); // 右手付近に配置
-        this.swordGroup.add(this.sword);
-        this.player.add(this.swordGroup);
-
         this.scene.add(this.player);
     }
 
-    // --- アクション関数（CombatUIからのエラーを解消） ---
-    attack() {
-        if (this.isAttacking) return;
-        this.isAttacking = true;
-        // 簡易的な振り下ろしアニメーション
-        const originalRotation = this.sword.rotation.x;
-        this.sword.rotation.x -= 1.5;
-        setTimeout(() => {
-            this.sword.rotation.x = originalRotation;
-            this.isAttacking = false;
-        }, 200);
+    setupUIEvents() {
+        document.getElementById('menu-btn').onclick = () => {
+            const mode = prompt(
+                "🛡️ Nexus OS Menu\n" +
+                "1: YouTube Stream (ID入力)\n" +
+                "2: High-Speed Proxy (URL入力)\n" +
+                "3: History (履歴表示)\n" +
+                "4: Downloader Test", "1"
+            );
+
+            if (mode === "1") {
+                const ytId = prompt("YouTube Video ID");
+                if (ytId) this.windowManager.createWindow('Nexus Stream', `https://www.youtube.com/embed/${ytId}?autoplay=1`);
+            } else if (mode === "2") {
+                const targetUrl = prompt("閲覧したいURL (https://... )");
+                if (targetUrl) {
+                    this.saveHistory(targetUrl);
+                    const proxyUrl = `${CONFIG.SERVER_URL}/proxy?url=${encodeURIComponent(targetUrl)}`;
+                    this.windowManager.createWindow('Nexus Browser', proxyUrl);
+                }
+            } else if (mode === "3") {
+                alert("最近の履歴:\n" + this.history.join("\n"));
+            } else if (mode === "4") {
+                alert("ダウンローダーは現在サーバー側で構築中です。");
+            }
+        };
     }
 
-    guard(state) {
-        this.isGuarding = state;
-        if (state) {
-            this.sword.position.set(0, 1.2, 0.8); // 前に構える
-            this.sword.rotation.z = Math.PI / 2;
-        } else {
-            this.sword.position.set(0.7, 1.2, 0.5); // 元に戻す
-            this.sword.rotation.z = 0;
+    saveHistory(url) {
+        this.history.unshift(url);
+        if (this.history.length > 5) this.history.pop();
+        localStorage.setItem('nexus_history', JSON.stringify(this.history));
+    }
+
+    async checkServer() {
+        const lamp = document.getElementById('node-lamp');
+        const status = document.getElementById('node-status');
+        try {
+            const res = await fetch(`${CONFIG.SERVER_URL}/ping`);
+            if (res.ok) {
+                lamp.style.color = '#00ff00';
+                status.innerText = 'ONLINE';
+            }
+        } catch (e) {
+            lamp.style.color = '#ff0000';
+            status.innerText = 'OFFLINE';
         }
-    }
-
-    jump() { 
-        if (!this.isJumping) { 
-            this.velocity.y = 0.2; 
-            this.isJumping = true; 
-        } 
-    }
-
-    slide() {
-        this.player.scale.y = 0.5;
-        setTimeout(() => { this.player.scale.y = 1.0; }, 500);
     }
 
     animate() {
         requestAnimationFrame(() => this.animate());
-
-        // 視点
-        this.yaw -= (this.vPad.lookInput.x || 0) * 2.0;
-        this.pitch -= (this.vPad.lookInput.y || 0) * 2.0;
-        this.pitch = Math.max(-Math.PI/3, Math.min(Math.PI/3, this.pitch));
-
-        this.vPad.lookInput.x = 0;
-        this.vPad.lookInput.y = 0;
+        this.yaw += (this.vPad.lookInput.x || 0);
+        this.pitch -= (this.vPad.lookInput.y || 0);
+        this.pitch = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, this.pitch));
+        this.vPad.lookInput.x = 0; this.vPad.lookInput.y = 0;
 
         if (this.player) {
             if (this.vPad.active) {
-                const moveSpeed = this.isGuarding ? 0.05 : 0.15;
-                // 移動方向の修正：入力をカメラの向きに合わせて正転
+                const moveSpeed = CONFIG.PLAYER.SPEED;
                 const forward = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
-                const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0), forward);
-
-                // input.yとxの計算を反転させて正しい方向へ
+                const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0,1,0));
                 this.player.position.addScaledVector(forward, -this.vPad.input.y * moveSpeed);
                 this.player.position.addScaledVector(right, this.vPad.input.x * moveSpeed);
-
                 this.player.rotation.y = this.yaw;
             }
-
-            // 重力
-            this.player.position.y += this.velocity.y;
-            if (this.player.position.y > 0) {
-                this.velocity.y -= 0.01;
-            } else {
-                this.player.position.y = 0;
-                this.velocity.y = 0;
-                this.isJumping = false;
-            }
-
-            // 三人称視点カメラ
-            const camDist = 6;
-            const horizontalDist = camDist * Math.cos(this.pitch);
-            const verticalDist = camDist * Math.sin(this.pitch);
-
+            const camDist = 5;
             this.camera.position.set(
-                this.player.position.x + Math.sin(this.yaw) * horizontalDist,
-                this.player.position.y + 2.5 + verticalDist,
-                this.player.position.z + Math.cos(this.yaw) * horizontalDist
+                this.player.position.x + Math.sin(this.yaw) * Math.cos(this.pitch) * camDist,
+                this.player.position.y + 2.5 + Math.sin(this.pitch) * camDist,
+                this.player.position.z + Math.cos(this.yaw) * Math.cos(this.pitch) * camDist
             );
-            this.camera.lookAt(new THREE.Vector3(this.player.position.x, this.player.position.y + 1, this.player.position.z));
+            this.camera.lookAt(this.player.position.x, this.player.position.y + 1, this.player.position.z);
         }
-
-        this.renderer.render(this.scene, this.camera);
-    }
-}
-window.onload = () => new NexusMaster().init();import { VirtualPad } from '../input/virtual-pad.js';
-import { CombatUI } from '../nexus-apps/combat-ui.js';
-
-export class NexusMaster {
-    constructor() {
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.vPad = new VirtualPad();
-        this.combat = new CombatUI(this);
-
-        this.velocity = new THREE.Vector3();
-        this.yaw = 0;   
-        this.pitch = 0; 
-        this.isJumping = false;
-        this.isAttacking = false;
-        this.isGuarding = false;
-    }
-
-    async init() {
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(this.renderer.domElement);
-        this.scene.background = new THREE.Color(0x000810);
-
-        this.scene.add(new THREE.GridHelper(100, 50, 0x00ffff, 0x002222));
-        this.scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-
-        this.createPlayer();
-        this.vPad.init();
-        this.combat.init();
-        this.animate();
-    }
-
-    createPlayer() {
-        this.player = new THREE.Group();
-
-        // 胴体
-        const body = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 16, 16),
-            new THREE.MeshStandardMaterial({ color: 0xff00ff })
-        );
-        body.scale.set(1, 2, 1);
-        body.position.y = 1.0; 
-        this.player.add(body);
-
-        // 武器（ネオン・ソード）
-        this.swordGroup = new THREE.Group();
-        const swordGeo = new THREE.BoxGeometry(0.1, 1.5, 0.1);
-        const swordMat = new THREE.MeshStandardMaterial({ 
-            color: 0x00ffff, 
-            emissive: 0x00ffff, 
-            emissiveIntensity: 2 
-        });
-        this.sword = new THREE.Mesh(swordGeo, swordMat);
-        this.sword.position.set(0.7, 1.2, 0.5); // 右手付近に配置
-        this.swordGroup.add(this.sword);
-        this.player.add(this.swordGroup);
-
-        this.scene.add(this.player);
-    }
-
-    // --- アクション関数（CombatUIからのエラーを解消） ---
-    attack() {
-        if (this.isAttacking) return;
-        this.isAttacking = true;
-        // 簡易的な振り下ろしアニメーション
-        const originalRotation = this.sword.rotation.x;
-        this.sword.rotation.x -= 1.5;
-        setTimeout(() => {
-            this.sword.rotation.x = originalRotation;
-            this.isAttacking = false;
-        }, 200);
-    }
-
-    guard(state) {
-        this.isGuarding = state;
-        if (state) {
-            this.sword.position.set(0, 1.2, 0.8); // 前に構える
-            this.sword.rotation.z = Math.PI / 2;
-        } else {
-            this.sword.position.set(0.7, 1.2, 0.5); // 元に戻す
-            this.sword.rotation.z = 0;
-        }
-    }
-
-    jump() { 
-        if (!this.isJumping) { 
-            this.velocity.y = 0.2; 
-            this.isJumping = true; 
-        } 
-    }
-
-    slide() {
-        this.player.scale.y = 0.5;
-        setTimeout(() => { this.player.scale.y = 1.0; }, 500);
-    }
-
-    animate() {
-        requestAnimationFrame(() => this.animate());
-
-        // 視点
-        this.yaw -= (this.vPad.lookInput.x || 0) * 2.0;
-        this.pitch -= (this.vPad.lookInput.y || 0) * 2.0;
-        this.pitch = Math.max(-Math.PI/3, Math.min(Math.PI/3, this.pitch));
-
-        this.vPad.lookInput.x = 0;
-        this.vPad.lookInput.y = 0;
-
-        if (this.player) {
-            if (this.vPad.active) {
-                const moveSpeed = this.isGuarding ? 0.05 : 0.15;
-                // 移動方向の修正：入力をカメラの向きに合わせて正転
-                const forward = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
-                const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0), forward);
-
-                // input.yとxの計算を反転させて正しい方向へ
-                this.player.position.addScaledVector(forward, -this.vPad.input.y * moveSpeed);
-                this.player.position.addScaledVector(right, this.vPad.input.x * moveSpeed);
-
-                this.player.rotation.y = this.yaw;
-            }
-
-            // 重力
-            this.player.position.y += this.velocity.y;
-            if (this.player.position.y > 0) {
-                this.velocity.y -= 0.01;
-            } else {
-                this.player.position.y = 0;
-                this.velocity.y = 0;
-                this.isJumping = false;
-            }
-
-            // 三人称視点カメラ
-            const camDist = 6;
-            const horizontalDist = camDist * Math.cos(this.pitch);
-            const verticalDist = camDist * Math.sin(this.pitch);
-
-            this.camera.position.set(
-                this.player.position.x + Math.sin(this.yaw) * horizontalDist,
-                this.player.position.y + 2.5 + verticalDist,
-                this.player.position.z + Math.cos(this.yaw) * horizontalDist
-            );
-            this.camera.lookAt(new THREE.Vector3(this.player.position.x, this.player.position.y + 1, this.player.position.z));
-        }
-
         this.renderer.render(this.scene, this.camera);
     }
 }

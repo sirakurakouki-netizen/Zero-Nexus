@@ -2,23 +2,31 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Zero-Nexus OS v3.0</title>
-    <link rel="stylesheet" href="./style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Zero-Nexus OS</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; touch-action: none; }
-        canvas { display: block; }
+        /* iOSのセーフエリア（ノッチ・ホームバー）対策（掟：UIのスケーラブル・セーフエリア） */
+        body {
+            margin: 0;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+        }
     </style>
 </head>
 <body>
-    <div id="ui-layer">
+    <div id="nexus-ui">
         <div id="status-bar">
-            <div id="status-lamp"></div>
-            <span id="status-text">SYSTEM BOOTING...</span>
+            <span id="node-lamp">●</span> NODE: <span id="node-status">CONNECTING...</span>
         </div>
-        <button id="menu-btn" style="position:fixed; top:10px; right:10px; z-index:100; padding:10px; background:#0f0; border:none; color:#000; font-weight:bold;">MENU</button>
+        <button id="menu-btn">MENU / メニュー</button>
     </div>
-    <script type="module" src="./modules/core/nexus-master.js"></script>
+
+    <div id="world-container"></div>
+
+    <script type="module" src="modules/core/nexus-master.js"></script>
 </body>
 </html>
