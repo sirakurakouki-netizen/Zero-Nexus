@@ -2,27 +2,32 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Zero-Nexus</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="os-ui">
-        <button id="menu-btn">MENU</button>
+        <div id="server-status">
+            <div id="status-lamp"></div>
+            <span id="status-text">NODE: STANDBY</span>
+        </div>
+
+        <button id="menu-btn">NEXUS MENU</button>
 
         <div id="proxy-browser" class="draggable-window">
             <div class="window-header" id="proxy-header">
-                <span class="nexus-tag">NEXUS PROXY / STREAM</span>
+                <span class="nexus-tag">NEXUS PROXY / BYPASS</span>
                 <div class="window-controls">
                     <button id="browser-close-btn">×</button>
                 </div>
             </div>
             <div class="browser-address-bar">
-                <input type="text" id="proxy-input" placeholder="URL or YouTube ID...">
-                <button id="nav-go">GO</button>
+                <input type="text" id="proxy-input" placeholder="YouTube ID or URL...">
+                <button id="nav-go">EXE</button>
             </div>
             <div class="window-content" id="browser-body">
-                <div id="proxy-status">READY: WAITING FOR BYPASS...</div>
+                <div id="proxy-status">MDM BYPASS READY...</div>
             </div>
         </div>
     </div>

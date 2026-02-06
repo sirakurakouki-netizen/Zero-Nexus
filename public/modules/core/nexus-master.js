@@ -1,37 +1,59 @@
-import { VisualCore } from '../world/visual-core.js';
-import { CameraEngine } from '../world/camera-engine.js';
+import { CONFIG } from '../shared/config.js';
 
-class NexusMaster {
+export class NexusMaster {
     constructor() {
-        this.visual = new VisualCore();
-        this.engine = new CameraEngine(this.visual);
+        // 聖典：Global State (世界の状態管理)
         this.state = {
-            mode: 'training',
-            isLoggedIn: false,
-            credits: 0
+            user: { name: 'Guest', level: 1, credits: 0 },
+            currentMode: 'lobby',
+            isServerOnline: false
         };
+
+        // 聖典：Event Bus (神経網)
+        this.events = new EventTarget();
     }
 
-    async boot() {
-        console.log("Nexus-Master: Initializing Kernel...");
-        try {
-            await this.visual.init();
-            await this.engine.init();
+    async init() {
+        console.log(`Nexus OS v${CONFIG.VERSION} Initializing...`);
 
-            this.loop();
-            console.log("Nexus-Master: System Online.");
+        // サーバー稼働確認
+        await this.checkServerStatus();
+
+        // 他のシステム(VisualCore等)をここから起動する
+        this.events.dispatchEvent(new CustomEvent('os_ready'));
+    }
+
+    async checkServerStatus() {
+        try {
+            const res = await fetch(`${CONFIG.SERVER_URL}/ping`);
+            const data = await res.json();
+            if (data.status === 'online') {
+                this.state.isServerOnline = true;
+                this.updateStatusLamp(true);
+            }
         } catch (e) {
-            console.error("Kernel Panic:", e);
-            document.body.innerHTML = `<div style="color:#f00; padding:20px;">KERNEL ERROR: ${e.message}</div>`;
+            console.error("Nexus Node is sleeping or blocked.");
+            this.updateStatusLamp(false);
         }
     }
 
-    loop() {
-        this.engine.update();
-        this.visual.render();
-        requestAnimationFrame(() => this.loop());
+    updateStatusLamp(online) {
+        const lamp = document.getElementById('status-lamp');
+        const text = document.getElementById('status-text');
+        if (lamp && text) {
+            lamp.className = online ? 'active' : '';
+            text.innerText = online ? "NODE: ONLINE" : "NODE: OFFLINE";
+        }
+    }
+
+    // 聖典：報酬システムの基盤
+    addCredits(amount) {
+        this.state.user.credits += amount;
+        console.log(`Credits Added: ${amount}. Total: ${this.state.user.credits}`);
     }
 }
 
+// 実行
 const nexus = new NexusMaster();
-window.onload = () => nexus.boot();
+window.nexus = nexus; // デバッグ用にグローバル公開
+nexus.init();
