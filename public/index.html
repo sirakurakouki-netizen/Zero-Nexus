@@ -8,16 +8,21 @@
 </head>
 <body>
     <div id="os-ui">
-        <button id="menu-btn">MENU / メニュー</button>
+        <button id="menu-btn">MENU</button>
 
-        <div id="nexus-window" class="hidden">
-            <div class="window-header">
-                <span>YOUTUBE STREAMER</span>
-                <button id="close-btn">×</button>
+        <div id="proxy-browser" class="draggable-window">
+            <div class="window-header" id="proxy-header">
+                <span class="nexus-tag">NEXUS PROXY / STREAM</span>
+                <div class="window-controls">
+                    <button id="browser-close-btn">×</button>
+                </div>
             </div>
-            <div class="window-content">
-                <input type="text" id="yt-url" placeholder="YouTube URL or ID...">
-                <button id="yt-play-btn">PLAY / 再生</button>
+            <div class="browser-address-bar">
+                <input type="text" id="proxy-input" placeholder="URL or YouTube ID...">
+                <button id="nav-go">GO</button>
+            </div>
+            <div class="window-content" id="browser-body">
+                <div id="proxy-status">READY: WAITING FOR BYPASS...</div>
             </div>
         </div>
     </div>

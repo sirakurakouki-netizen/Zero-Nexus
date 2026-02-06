@@ -6,29 +6,37 @@ export class VisualCore {
         this.scene = new THREE.Scene();
         this.cssScene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.cssRenderer = new CSS3DRenderer();
     }
 
     async init() {
-        // CSS3D レイヤー (最背面にして、WebGLを透明に重ねる)
+        // 1. CSS3D (YouTube用レイヤー)
         this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
         this.cssRenderer.domElement.style.position = 'absolute';
         this.cssRenderer.domElement.style.top = '0';
-        this.cssRenderer.domElement.style.zIndex = '0'; // ここを0に
+        this.cssRenderer.domElement.style.zIndex = '0'; // 背景側
         document.body.appendChild(this.cssRenderer.domElement);
 
-        // WebGL レイヤー
+        // 2. WebGL (ゲーム用レイヤー)
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.setClearColor(0x000000, 0); // 背景を透明にする
+        this.renderer.setClearColor(0x000000, 0); // 透明にしてCSS3Dを見せる
         this.renderer.domElement.style.position = 'absolute';
         this.renderer.domElement.style.top = '0';
-        this.renderer.domElement.style.zIndex = '1'; 
-        this.renderer.domElement.style.pointerEvents = 'none'; // 3D部分以外をスルーしてYouTubeを触れるように
+        this.renderer.domElement.style.zIndex = '1'; // 前面側
+        this.renderer.domElement.style.pointerEvents = 'none'; // クリックを下のYouTubeに通す
         document.body.appendChild(this.renderer.domElement);
 
-        this.scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const ambient = new THREE.AmbientLight(0xffffff, 1.0);
+        this.scene.add(ambient);
+
+        window.addEventListener('resize', () => {
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
     }
 
     add(obj) { this.scene.add(obj); }
